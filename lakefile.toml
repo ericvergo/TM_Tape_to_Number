@@ -13,3 +13,7 @@ scope = "leanprover-community"
 
 [[lean_lib]]
 name = "TMTapeToNumber"
+
+[[lean_exe]]
+name = "tm_tape_to_number"
+root = "Main"
