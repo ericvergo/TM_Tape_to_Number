@@ -1,312 +1,199 @@
 # TM Tape to Number: Project Status & Roadmap
 
 **Date:** December 2024  
-**Status:** ✅ **Phase 1 Complete - Core Infrastructure Built**  
-**Build Status:** ✅ All modules compile successfully  
+**Status:** ✅ **Major Refactoring Complete - Direct TM0 Implementation**  
+**Build Status:** ✅ All modules compile successfully (no errors, only `sorry` warnings)  
+**Current Focus:** 🎯 **Complete core module proofs before ANY example work**  
 
 ## 🎯 Project Overview
 
-This project formalizes leftward-unbounded Turing machines that generate integer sequences by encoding their tape contents as natural numbers. The implementation leverages mathlib's proven TM0 infrastructure while maintaining specific leftward-unbounded semantics.
+This project formalizes Turing machines that generate integer sequences by encoding their tape contents as natural numbers. The implementation now uses mathlib's TM0 types directly without wrapper types or position constraints.
 
 ## 📊 Current State
 
-### ✅ **Completed Infrastructure**
+### ✅ **Completed Refactoring (December 2024)**
 
-#### **Core Architecture (Phase 1)**
-- **`LeftwardTape.lean`** - Wrapper around mathlib's `Tape Γ` with leftward constraints
-- **`LeftTM0/Machine.lean`** - TM0-based machine definitions with position validation
-- **`LeftTM0/Step.lean`** - Step functions and execution semantics using `TM0.step`
-- **`LeftTM0/Encoding.lean`** - Integer encoding from tape contents (binary representation)
-- **`LeftTM0/Sequences.lean`** - Sequence generation infrastructure with bounds
-- **`LeftTM0/Examples/PowersOfTwo.lean`** - Complete powers of 2 generator example
+#### **New Architecture**
+- **`Encoding.lean`** - Direct tape encoding without position constraints
+  - ✅ Position-to-exponent bijection defined
+  - ✅ `encode_tape` function structure
+  - ❌ 7 proofs pending (all using `sorry`)
+- **`Sequences.lean`** - Sequence generation using standard TM0
+  - ✅ `step_or_stay` helper for Option handling
+  - ✅ `sequence` function for generating number sequences
+  - ✅ Helper functions for initialization
+  - ❌ 1 proof pending
+- **`Basic.lean`** - Clean public API importing all modules
+- **Removed old infrastructure**:
+  - ✅ Deleted `LeftwardTape.lean`
+  - ✅ Deleted entire `LeftTM0/` directory
+  - ✅ Removed all position constraints
 
-#### **Integration & Compatibility**
-- **`Basic.lean`** - Clean public API with backward compatibility layer
-- **Legacy namespace** - Deprecated old interface with migration helpers
-- **Project structure** - Modular organization ready for extensions
+#### **Theorem Modules**
+- **`Theorems/EncodingProperties.lean`** - Encoding theorems
+  - ✅ 11 theorem signatures defined
+  - ❌ 8 proofs pending
+- **`Theorems/SequenceProperties.lean`** - Machine execution properties
+  - ✅ 6 theorem signatures defined
+  - ❌ 6 proofs pending
+
+#### **Examples (DO NOT WORK ON UNTIL CORE IS COMPLETE)**
+- **`Examples/PowersOfTwo.lean`** - Example using standard TM0
+  - ✅ Machine definition
+  - ❌ 4 proofs pending
+  - ⚠️ **DO NOT WORK ON THIS UNTIL CORE MODULES ARE COMPLETE**
 
 ### 🔧 **Technical Foundation**
 
-#### **Key Design Decisions**
-1. **Built on TM0**: Leverages `Mathlib.Computability.PostTuringMachine` for proven foundations
-2. **Position constraints**: Enforces `head_pos ≤ 0` invariant in `LeftwardTape`
-3. **Finsupp encoding**: Uses `∑ k ∈ range, if T.nth (-k) then 2^k else 0` for integer encoding
-4. **Noncomputable by design**: Mathematical focus over computational efficiency
+#### **Key Design Benefits**
+1. **Direct TM0 usage**: No wrapper types, use `TM0.Tape` and `TM0.Cfg` directly
+2. **No position constraints**: Works with any tape positions
+3. **Flexible encoding**: Position-to-exponent bijection:
+   ```lean
+   def position_to_exponent : ℤ → ℕ
+     | (n : ℕ) => 2 * n          -- 0, 1, 2, ... → 0, 2, 4, ...
+     | -(n + 1 : ℕ) => 2 * n + 1 -- -1, -2, -3, ... → 1, 3, 5, ...
+   ```
+4. **Finite support**: Encoding only defined for tapes with finite support
 
-#### **Current Capabilities**
-- ✅ Define leftward-unbounded TM machines using standard TM0 operations
-- ✅ Execute machines step-by-step with automatic constraint enforcement
-- ✅ Generate integer sequences from tape encodings
-- ✅ Powers of 2 example: `1, 2, 4, 8, 16, ...` (structure in place)
-- ✅ Theoretical framework ready for bounds and properties
+## 🚧 Current Proof Status
 
-## 🚧 Current Limitations
+### **Core Modules (MUST COMPLETE FIRST)**
 
-### **Proof Gaps (Expected)**
-All theoretical results have `sorry` placeholders - this is intentional for Phase 1:
+| Module | Total Theorems | Completed | Remaining | Priority |
+|--------|----------------|-----------|-----------|----------|
+| **Encoding.lean** | 7 | 0 | **7** | 🔴 HIGH |
+| **Sequences.lean** | 1 | 0 | **1** | 🔴 HIGH |
+| **TOTAL CORE** | **8** | **0** | **8** | **CRITICAL** |
 
-- **Encoding properties**: Basic correctness of tape-to-integer conversion
-- **Sequence bounds**: Growth rates and step differences  
-- **Machine properties**: Termination and reachability
-- **Powers of 2 verification**: Actual sequence generation correctness
+### **Theorem Modules (COMPLETE SECOND)**
 
-### **Implementation Notes**
-- **Finite approximation**: Encoding uses `Finset.range 100` (positions 0 to -99)
-- **Head position tracking**: Simplified to focus on constraint enforcement
-- **Error handling**: Violations cause immediate halt (design choice)
+| Module | Total Theorems | Completed | Remaining | Priority |
+|--------|----------------|-----------|-----------|----------|
+| **EncodingProperties.lean** | 8 | 0 | **8** | 🟡 MEDIUM |
+| **SequenceProperties.lean** | 6 | 0 | **6** | 🟡 MEDIUM |
+| **TOTAL THEOREMS** | **14** | **0** | **14** | **MEDIUM** |
 
-## 🎯 Next Steps & Roadmap
+### **Examples (DO NOT TOUCH YET)**
 
-### **Phase 2: Theoretical Foundations (4-6 weeks)**
+| Module | Total Theorems | Completed | Remaining | Priority |
+|--------|----------------|-----------|-----------|----------|
+| **PowersOfTwo.lean** | 4 | 0 | 4 | 🔵 LOW |
+| **TOTAL EXAMPLES** | **4** | **0** | **4** | **BLOCKED** |
 
-#### **Priority 1: Core Encoding Properties**
-```lean
--- File: TMTapeToNumber/Theorems/EncodingProperties.lean
-theorem encode_single_bit : 
-  ∀ (pos : ℤ) (h : pos ≤ 0), 
-  encode (single_true_at pos) = 2^(Int.natAbs (-pos))
+## 🛑 CRITICAL: Work Order Requirements
 
-theorem encode_additive :
-  ∀ (tape1 tape2 : LeftwardTape Bool),
-  disjoint_support tape1 tape2 →
-  encode (tape1 + tape2) = encode tape1 + encode tape2
-```
+### **DO NOT WORK ON EXAMPLES UNTIL CORE IS COMPLETE!**
 
-**Implementation Strategy:**
-1. Start with `encode_single_bit` - proves encoding correctness for basic cases
-2. Build up to `encode_additive` - establishes compositionality 
-3. Use mathlib's `Finset.sum` theorems extensively
-4. Prove finite approximation is exact for any concrete machine execution
+The following strict order MUST be followed:
 
-#### **Priority 2: Machine Step Properties**
-```lean
--- File: TMTapeToNumber/Theorems/StepProperties.lean
-theorem step_preserves_encoding_bounds :
-  ∀ (M : Machine Bool Λ) (cfg cfg' : Cfg Bool Λ),
-  step M cfg = some cfg' →
-  |encode_config cfg' - encode_config cfg| ≤ 2^(max_reachable_position cfg)
+1. **FIRST: Complete ALL proofs in core modules**
+   - Encoding.lean (7 proofs)
+   - Sequences.lean (1 proof)
+   
+2. **SECOND: Complete ALL proofs in theorem modules**
+   - EncodingProperties.lean (8 proofs)
+   - SequenceProperties.lean (6 proofs)
+   
+3. **ONLY THEN: Work on examples**
+   - PowersOfTwo.lean
+   - Other examples
 
-theorem step_changes_single_bit :
-  ∀ (M : Machine Bool Λ) (cfg cfg' : Cfg Bool Λ),
-  step M cfg = some cfg' →
-  hamming_distance cfg.tape cfg'.tape ≤ 1
-```
+### **Why This Order Is Mandatory**
 
-**Implementation Strategy:**
-1. Leverage TM0's existing step properties via `cfg_to_tm0` conversion
-2. Prove constraint preservation implies bounded changes
-3. Use position tracking to bound the magnitude of changes
+- **Core modules** define the fundamental encoding and sequence generation
+- **Theorem modules** establish properties that examples will rely on
+- **Examples** depend on both core functionality AND proven properties
+- Working out of order will lead to:
+  - Circular dependencies
+  - Rework when core APIs change
+  - Invalid example proofs
+  - Wasted effort
 
-#### **Priority 3: Powers of 2 Verification**
-```lean
--- File: TMTapeToNumber/Examples/PowersOfTwoProofs.lean
-theorem powers_sequence_correct :
-  ∀ n : ℕ, ∃ k : ℕ, powers_sequence n = 2^k
+## 🎯 Immediate Next Steps
 
-theorem powers_generates_all_powers :
-  ∀ k : ℕ, ∃ n : ℕ, powers_sequence n = 2^k
-```
+### **Priority 1: Complete Core Module Proofs (Week 1)**
 
-**Implementation Strategy:**
-1. Manually trace first 5-10 steps of execution
-2. Identify the loop invariant (tape pattern between iterations)
-3. Prove invariant preservation using step properties
-4. Show that each loop iteration increments the power
+#### **Encoding.lean (7 proofs)**
+1. `position_exponent_left_inv` - Prove the bijection is a left inverse
+2. `position_exponent_right_inv` - Prove the bijection is a right inverse
+3. `encode_tape` - Implement the actual encoding function (currently just `sorry`)
+4. `encode_tape_ext` - Prove encoding respects tape equality
+5. `encode_tape_all_false` - Prove empty tape encodes to 0
+6. `encode_tape_single_true` - Prove single true encodes correctly
+7. `encode_tape_injective` - Prove encoding is injective
 
-### **Phase 3: Advanced Theory (3-4 weeks)**
+#### **Sequences.lean (1 proof)**
+1. `sequence_const_after_halt` - Prove sequence is constant after halting
 
-#### **Sequence Characterization**
-```lean
--- File: TMTapeToNumber/Theorems/SequenceProperties.lean
-theorem tm_sequence_growth_bound :
-  ∀ (M : Machine Bool Λ) (init : Cfg Bool Λ) (t : ℕ),
-  sequence M init t ≤ 2^(t + initial_content_bound init)
+### **Priority 2: Complete Theorem Module Proofs (Week 2)**
 
-theorem tm_sequence_step_constraint :
-  ∀ (M : Machine Bool Λ) (init : Cfg Bool Λ) (t : ℕ),
-  |sequence M init (t+1) - sequence M init t| ∈ {0} ∪ {2^i | i : ℕ} ∪ {-2^i | i : ℕ}
-```
+Only start these AFTER all core module proofs are complete.
 
-#### **Decidability Results**
-```lean
--- File: TMTapeToNumber/Theorems/Decidability.lean
-theorem sequence_equality_decidable :
-  ∀ (M₁ M₂ : Machine Bool Λ) (n : ℕ),
-  decidable (∀ k ≤ n, sequence M₁ init₁ k = sequence M₂ init₂ k)
-```
+### **Priority 3: Examples (Week 3+)**
 
-### **Phase 4: Extended Examples (2-3 weeks)**
-
-#### **New Machine Examples**
-- **Binary counter**: `1, 2, 3, 4, 5, ...`
-- **Fibonacci generator**: `1, 1, 2, 3, 5, 8, ...`  
-- **Prime powers**: `2, 4, 8, 9, 16, 25, ...`
-- **Custom sequences**: User-defined patterns
-
-#### **Comparative Analysis**
-- Complexity comparison between machines
-- Equivalence classes of machines generating the same sequence
-- Minimal machine characterization
-
-### **Phase 5: Integration & Publication (2-3 weeks)**
-
-#### **Mathlib Integration Preparation**
-- Factor out reusable components for potential mathlib contribution
-- Establish equivalence with standard TM0 for machines respecting constraints
-- Clean up and document API for external use
-
-#### **Research Applications**
-- Generate data for sequence analysis
-- Explore connections to other computational models
-- Investigate decidability boundaries
+Do NOT start until all core and theorem proofs are complete.
 
 ## 📋 Implementation Guidelines
 
-### **Development Workflow**
+### **Proof Development Strategy**
 
-#### **1. Theorem-First Approach**
-```lean
--- Always start with the theorem statement
-theorem important_property (args : Types) : conclusion := by sorry
+1. **Start with simple cases**: Prove for empty tapes, single elements
+2. **Build helper lemmas**: Create intermediate results as needed
+3. **Use mathlib tactics**: Leverage existing theorems about `Finset`, `Function.iterate`, etc.
+4. **Test incrementally**: Ensure each proof compiles before moving on
 
--- Then build supporting lemmas
-lemma supporting_fact_1 : ... := by sorry
-lemma supporting_fact_2 : ... := by sorry
+### **Code Quality Standards**
 
--- Finally, complete the proof
-theorem important_property (args : Types) : conclusion := by
-  apply supporting_fact_1
-  exact supporting_fact_2
-```
-
-#### **2. Incremental Development**
-- **One file at a time**: Complete each module before moving to the next
-- **Test frequently**: `lake build` after every few lemmas
-- **Document as you go**: Add docstrings and examples
-
-#### **3. Proof Strategy**
-- **Start simple**: Prove special cases first (single bit, two bits, etc.)
-- **Use mathlib**: Leverage existing theorems about `Finset.sum`, `Nat.iterate`, etc.
-- **Build abstractions**: Create intermediate definitions to simplify complex proofs
-
-### **Code Organization Standards**
-
-#### **File Structure**
-```
-TMTapeToNumber/
-├── Basic.lean                    # Public API (already complete)
-├── LeftwardTape.lean             # Core tape definition (complete)
-├── LeftTM0/
-│   ├── Machine.lean              # Machine definitions (complete)
-│   ├── Step.lean                 # Step semantics (complete)
-│   ├── Encoding.lean             # Encoding functions (complete)
-│   └── Sequences.lean            # Sequence generation (complete)
-├── Theorems/                     # NEW: Theoretical results
-│   ├── EncodingProperties.lean   # Encoding correctness
-│   ├── StepProperties.lean       # Step-by-step analysis
-│   ├── SequenceProperties.lean   # Sequence characterization
-│   └── Decidability.lean         # Decidability results
-├── Examples/                     # NEW: Extended examples
-│   ├── PowersOfTwoProofs.lean    # Powers of 2 verification
-│   ├── BinaryCounter.lean        # Binary counting machine
-│   ├── Fibonacci.lean            # Fibonacci sequence
-│   └── PrimePowers.lean          # Prime power generator
-└── Integration/                  # NEW: Mathlib integration
-    ├── TM0Equivalence.lean       # Equivalence with TM0
-    └── MathlibCompat.lean        # Compatibility layer
-```
-
-#### **Naming Conventions**
-- **Theorems**: `snake_case` with descriptive names
-- **Definitions**: `camelCase` for functions, `PascalCase` for types
-- **Examples**: `PascalCase` for machine states, `snake_case` for functions
-- **Files**: `PascalCase.lean` for modules
-
-#### **Documentation Standards**
-```lean
-/-- Brief description of the theorem/definition.
-
-Longer explanation if needed, including:
-- Context and motivation
-- Key assumptions or constraints
-- Examples of usage
-
-See also: related theorems or definitions -/
-theorem my_theorem (args : Types) : conclusion := by
-  sorry
-```
-
-### **Testing & Validation**
-
-#### **Continuous Integration**
-- **Every commit**: Must pass `lake build` without errors
-- **Only warnings allowed**: `sorry` placeholders and unused variables
-- **Documentation**: All public definitions must have docstrings
-
-#### **Validation Methods**
-1. **Manual verification**: Trace small examples by hand
-2. **Property testing**: Use `#check` and `#eval` for sanity checks
-3. **Cross-validation**: Compare with external computations where possible
-
-#### **Performance Considerations**
-- **Noncomputable by design**: Focus on mathematical correctness
-- **Finite approximations**: Document limitations and justify sufficiency
-- **Scalability**: Ensure proofs work for arbitrary (finite) configurations
+- Every theorem must compile without errors
+- Use descriptive names for helper lemmas
+- Add comments for complex proof steps
+- Keep proofs readable and maintainable
 
 ## 🎯 Success Criteria
 
-### **Phase 2 Success Metrics**
-- [ ] All encoding properties proven (no `sorry` in EncodingProperties.lean)
-- [ ] Step properties established with concrete bounds
-- [ ] Powers of 2 example fully verified with explicit computation
-- [ ] At least 90% of current `sorry` placeholders resolved
+### **Phase 1: Core Complete**
+- [ ] All 8 core module proofs completed
+- [ ] No `sorry` in Encoding.lean or Sequences.lean
+- [ ] All core functionality tested and verified
 
-### **Phase 3 Success Metrics**  
-- [ ] Complete characterization of TM-generable sequences
-- [ ] Growth bounds proven with explicit constants
-- [ ] Decidability results for sequence properties
-- [ ] At least 2 additional working examples with proofs
+### **Phase 2: Theorems Complete**
+- [ ] All 14 theorem module proofs completed
+- [ ] Properties of encoding established
+- [ ] Sequence behavior characterized
 
-### **Phase 4 Success Metrics**
-- [ ] 5+ diverse machine examples with verified sequence generation
-- [ ] Comparative analysis between different machine types
+### **Phase 3: Examples Working**
+- [ ] Powers of 2 example verified
+- [ ] At least one additional example
 - [ ] Clear documentation for creating new examples
 
-### **Long-term Vision**
-- **Research contribution**: Novel results about TM sequence generation
-- **Mathlib integration**: Reusable components contributed to mathlib
-- **Educational resource**: Clear examples for computational mathematics
-- **Foundation for extensions**: Ready for 2D tapes, probabilistic machines, etc.
+## 📈 Progress Tracking
 
-## 🚀 Getting Started
+**Current Status (December 2024):**
+- ✅ Architecture refactoring complete
+- ✅ All modules compile successfully
+- ❌ 0/8 core proofs complete
+- ❌ 0/14 theorem proofs complete
+- ❌ 0/4 example proofs complete
+- **Total: 0/26 proofs complete (0%)**
 
-### **Immediate Next Steps (Week 1)**
+**Next Milestone:** Complete all 8 core module proofs (31% total completion)
 
-1. **Create the Theorems directory**:
-   ```bash
-   mkdir TMTapeToNumber/Theorems
-   ```
+## ⚠️ Important Notes
 
-2. **Start with encoding properties**:
-   ```lean
-   -- Create TMTapeToNumber/Theorems/EncodingProperties.lean
-   -- Begin with encode_single_bit theorem
-   ```
+1. **No shortcuts**: Do not skip to examples even if they seem easier
+2. **Maintain quality**: Better to have fewer complete proofs than many incomplete ones
+3. **Ask for help**: If stuck on a proof, seek assistance rather than leaving it incomplete
+4. **Document changes**: Update this status file as proofs are completed
 
-3. **Set up systematic testing**:
-   ```lean
-   -- Add concrete examples with #check commands
-   -- Verify basic encoding computations
-   ```
+## 🚀 Long-term Vision
 
-### **Development Priority Queue**
-1. 🔥 **High**: `encode_single_bit` and `encode_additive` 
-2. 🔥 **High**: First 3 steps of powers of 2 verification
-3. 🟡 **Medium**: Step property framework
-4. 🟡 **Medium**: Sequence growth bounds
-5. 🔵 **Low**: Additional examples
-6. 🔵 **Low**: Mathlib integration prep
+Once all proofs are complete:
+- Contribute reusable components to mathlib
+- Create educational materials
+- Extend to more complex machine types
+- Explore connections to computational complexity
 
 ---
 
-**The foundation is solid. Time to build the mathematical theory on top of this robust infrastructure!** 🏗️➡️📐
+**Remember: COMPLETE CORE MODULES FIRST! No exceptions.**
