@@ -1,4 +1,4 @@
-import TMTapeToNumber.LeftTM0.Encoding
+import TMTapeToNumber.LeftTM0.LeftwardEncoding
 
 namespace LeftTM0
 

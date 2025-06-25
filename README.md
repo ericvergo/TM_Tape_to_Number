@@ -27,15 +27,15 @@ Importantly, the encoding is based on **absolute tape positions**, not positions
 
 ```
 TMTapeToNumber/
-├── Basic.lean                    # Public API and exports
+├── Basic.lean                    # Core module with type definitions and basic operations
 ├── LeftwardTape.lean            # Leftward-bounded tape with position constraints
-└── LeftTM0/
-    ├── Machine.lean             # Machine definitions using mathlib's TM0
-    ├── Step.lean                # Step execution semantics
-    ├── Encoding.lean            # Tape-to-number encoding functions
-    ├── Sequences.lean           # Sequence generation from machine execution
-    └── Examples/
-        └── PowersOfTwo.lean     # Example: machine generating powers of 2
+├── Encoding.lean                # Tape-to-number encoding functions
+├── Sequences.lean               # Sequence generation from machine execution
+├── Examples/
+│   └── PowersOfTwo.lean         # Example: machine generating powers of 2
+└── Theorems/
+    ├── EncodingProperties.lean  # Properties of the encoding function
+    └── SequenceProperties.lean  # Properties of generated sequences
 ```
 
 ## Key Components
