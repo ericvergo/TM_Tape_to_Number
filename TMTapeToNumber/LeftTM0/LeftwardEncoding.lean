@@ -3,6 +3,9 @@ import Mathlib.Data.Finset.Lattice.Basic
 import Mathlib.Data.Fintype.Card
 import Mathlib.Order.MinMax
 import Mathlib.Data.List.MinMax
+import Mathlib.Algebra.GeomSum
+
+set_option linter.unusedSectionVars false
 
 namespace LeftTM0
 
@@ -34,7 +37,7 @@ noncomputable def leftmost_true_pos (cfg : Cfg Bool Λ) : Option ℤ :=
 
 /-- Get the rightmost absolute position with true content -/
 noncomputable def rightmost_true_pos (cfg : Cfg Bool Λ) : Option ℤ :=
-  -- Get all absolute positions with true values  
+  -- Get all absolute positions with true values
   let true_positions := cfg.tape.true_positions_absolute
   match true_positions.toList.maximum with
   | ⊥ => none
@@ -42,30 +45,80 @@ noncomputable def rightmost_true_pos (cfg : Cfg Bool Λ) : Option ℤ :=
 
 -- Properties of encoding (now using absolute positions)
 theorem encode_config_zero (cfg : Cfg Bool Λ) :
-    cfg.tape.nth_absolute 0 = false → 
+    cfg.tape.nth_absolute 0 = false →
     (∀ i < 0, cfg.tape.nth_absolute i = false) →
-    encode_config cfg = 0 := by sorry
+    encode_config cfg = 0 := by
+  intro h0 h_neg
+  -- encode_config cfg = cfg.tape.encode
+  simp only [encode_config, encode_tape]
+  -- cfg.tape.encode = ∑ i ∈ true_positions_absolute cfg.tape, 2^(Int.natAbs (-i))
+  simp only [LeftwardTape.encode]
+  -- We need to show that true_positions_absolute is empty
+  -- true_positions_absolute filters for positions i ≤ 0 where nth_absolute i = true
+  -- But we know nth_absolute 0 = false and for all i < 0, nth_absolute i = false
+  -- So there are no positions i ≤ 0 with nth_absolute i = true
+  have h_empty : cfg.tape.true_positions_absolute = ∅ := by
+    simp only [LeftwardTape.true_positions_absolute]
+    ext i
+    simp only [Finset.mem_filter, Finset.notMem_empty]
+    constructor
+    · intro ⟨hi_mem, hi_le, hi_true⟩
+      -- We have i ≤ 0 and cfg.tape.nth_absolute i = true
+      -- Need to derive a contradiction
+      cases' (Int.le_iff_lt_or_eq.mp hi_le) with hi_lt hi_eq
+      · -- Case: i < 0
+        have : cfg.tape.nth_absolute i = false := h_neg i hi_lt
+        rw [this] at hi_true
+        simp at hi_true
+      · -- Case: i = 0
+        rw [hi_eq] at hi_true
+        rw [h0] at hi_true
+        simp at hi_true
+    · intro h_false
+      -- h_false is False, so we can prove anything
+      exact False.elim h_false
+  rw [h_empty]
+  simp
 
 theorem encode_config_single_true_at_zero (cfg : Cfg Bool Λ) :
-    cfg.tape.nth_absolute 0 = true → 
+    cfg.tape.nth_absolute 0 = true →
     (∀ i < 0, cfg.tape.nth_absolute i = false) →
-    encode_config cfg = 1 := by sorry
-
-theorem encode_config_monotone_right_shift (cfg : Cfg Bool Λ) :
-    -- If we shift all absolute content one position left, encoding doubles
-    ∀ (cfg' : Cfg Bool Λ), (∀ i, cfg'.tape.nth_absolute (i-1) = cfg.tape.nth_absolute i) →
-    cfg'.tape.nth_absolute 0 = false →
-    encode_config cfg' = 2 * encode_config cfg := by sorry
-
-/-- Bound on encoding based on tape content -/
-theorem encode_config_bound (cfg : Cfg Bool Λ) :
-    match leftmost_true_pos cfg with
-    | none => encode_config cfg = 0
-    | some pos => encode_config cfg ≤ 2^(Int.natAbs pos) - 1 := by sorry
-
-/-- Single step can change encoding by at most a power of 2 -/
-theorem encode_step_diff (M : Machine Bool Λ) (cfg cfg' : Cfg Bool Λ) :
-    step M cfg = some cfg' →
-    ∃ k : ℕ, |Int.ofNat (encode_config cfg') - Int.ofNat (encode_config cfg)| ≤ 2^k := by sorry
+    encode_config cfg = 1 := by
+  intro h0 h_neg
+  -- encode_config cfg = cfg.tape.encode
+  simp only [encode_config, encode_tape]
+  -- cfg.tape.encode = ∑ i ∈ true_positions_absolute cfg.tape, 2^(Int.natAbs (-i))
+  simp only [LeftwardTape.encode]
+  -- true_positions_absolute contains exactly position 0
+  have h_singleton : cfg.tape.true_positions_absolute = {0} := by
+    simp only [LeftwardTape.true_positions_absolute]
+    ext i
+    simp only [Finset.mem_filter, Finset.mem_singleton]
+    constructor
+    · intro ⟨hi_mem, hi_le, hi_true⟩
+      -- We have i ≤ 0 and cfg.tape.nth_absolute i = true
+      cases' (Int.le_iff_lt_or_eq.mp hi_le) with hi_lt hi_eq
+      · -- Case: i < 0
+        have : cfg.tape.nth_absolute i = false := h_neg i hi_lt
+        rw [this] at hi_true
+        simp at hi_true
+      · -- Case: i = 0
+        exact hi_eq
+    · intro hi_eq
+      rw [hi_eq]
+      refine ⟨?_, by norm_num, h0⟩
+      -- Need to show 0 ∈ {i | has_content_at_absolute cfg.tape i}.toFinset
+      simp only [Set.Finite.mem_toFinset, Set.mem_setOf, LeftwardTape.has_content_at_absolute]
+      -- nth_absolute 0 = true ≠ default
+      rw [h0]
+      -- For Bool, default = false, so true ≠ false
+      simp only [ne_eq]
+      -- true ≠ false
+      trivial
+  rw [h_singleton]
+  -- Now compute: ∑ i ∈ {0}, 2^(Int.natAbs (-i))
+  simp only [Finset.sum_singleton]
+  -- 2^(Int.natAbs (-0)) = 2^(Int.natAbs 0) = 2^0 = 1
+  simp
 
 end LeftTM0

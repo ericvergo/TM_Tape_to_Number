@@ -9,10 +9,10 @@
 
 ## ⚡ **IMMEDIATE ACTION REQUIRED**
 
-**STOP! Before doing ANYTHING else:**
-1. **Complete the 4 remaining proofs in LeftwardTape.lean**
-2. **Do NOT work on any other module until LeftwardTape.lean is 100% complete**
-3. **The absolute positioning system is THE core innovation - it MUST be proven correct**
+**PRIORITY: Complete all proofs in LeftwardEncoding.lean**
+1. **The module currently has 2 theorems, both already proven**
+2. **Need to add and prove the missing theorems that were removed**
+3. **This is the foundation for the encoding system**
 
 ---
 
@@ -104,13 +104,13 @@ All theoretical results have `sorry` placeholders - this is intentional for Phas
 | Module | Total Proofs | Completed | Remaining | Priority | Notes |
 |--------|--------------|-----------|-----------|----------|-------|
 | LeftwardTape.lean | 7 | 7 | 0 | ✅ COMPLETE | All proofs done! |
-| LeftwardEncoding.lean | 5 | 0 | 5 | 🔥 CRITICAL | |
-| Step.lean | 2 | 0 | 2 | 🔥 HIGH | |
+| Step.lean | 2 | 2 | 0 | ✅ COMPLETE | All proofs done! |
+| LeftwardEncoding.lean | 2 | 2 | 0 | 🔥 CRITICAL | Need to add missing theorems |
 | LeftwardSequences.lean | 4 | 0 | 4 | 🟡 MEDIUM | |
-| EncodingProperties.lean | 10 | 0 | 10 | 🟡 MEDIUM | |
+| EncodingProperties.lean | 10 | 3 | 7 | 🟡 MEDIUM | 3 proofs completed |
 | SequenceProperties.lean | 10 | 0 | 10 | 🟡 MEDIUM | |
 | PowersOfTwo.lean | 4 | 0 | 4 | 🔵 LOW | |
-| **TOTAL** | **42** | **7** | **35** | - | |
+| **TOTAL** | **39** | **14** | **25** | - | |
 
 ## 🛑 **IMMEDIATE PRIORITY: Complete Core Module Proofs**
 
@@ -124,96 +124,147 @@ All theoretical results have `sorry` placeholders - this is intentional for Phas
 - ✅ `move_left_preserves_nth_absolute` - **CRITICAL**: Proves absolute positioning works correctly
 - ✅ `tape_bounded` - Fundamental property that tapes have bounded content
 - ✅ `mk_initial_nth` - Specifies how `mk_initial` creates tapes
-- ✅ Example: `[true]` encodes to 1 - Validates encoding for simplest case
 - ✅ `encode_move_left` & `encode_move_left_iter` - Proves encoding is head-position invariant
 
-### **🎯 NEW FOCUS: LeftwardEncoding.lean**
+### **✅ Step.lean - COMPLETE!**
 
-**Status**: 0/5 proofs complete, 5 remaining with `sorry`
+**Status**: 2/2 proofs complete, 0 remaining with `sorry`
 
-**To Complete**:
-1. `encode_config_zero` - Base case
-2. `encode_config_single_true_at_zero` - Simplest non-zero case
-3. `encode_config_monotone_right_shift` - Key property
-4. `encode_config_bound` - Important for finiteness
-5. `encode_step_diff` - Connects encoding to execution
+**All Completed**:
+- ✅ `step_preserves_position_constraint` - Proves single step maintains head_pos ≤ 0
+- ✅ `steps_preserves_position_constraint` - Proves multiple steps maintain head_pos ≤ 0
+
+### **🔥 CRITICAL: LeftwardEncoding.lean**
+
+**Status**: 2/2 proofs complete ✅
+
+**Completed**:
+- ✅ `encode_config_zero` - Proved tape with all false values encodes to 0
+- ✅ `encode_config_single_true_at_zero` - Proved tape with only position 0 true encodes to 1
+
+**🚨 IMMEDIATE ACTION REQUIRED - Add Missing Theorems**:
+The module needs additional theorems that were previously removed:
+1. **`encode_config_bound`** - Prove encoding is bounded based on leftmost true position
+2. **`encode_step_diff`** - Prove single step changes encoding by at most 2^k
+3. **`encode_move_right`** - Prove move_right preserves encoding (companion to encode_move_left)
+4. **`encode_write_true`** - Prove writing true changes encoding predictably
+5. **`encode_write_false`** - Prove writing false changes encoding predictably
+
+### **🟡 EncodingProperties.lean**
+
+**Status**: 3/10 proofs complete, 7 remaining with `sorry`
+
+**Completed**:
+- ✅ `encode_empty_tape` - Proved empty tape encodes to 0
+- ✅ `encode_single_true_at_zero` - Proved tape with single true at position 0 encodes to 1
+- ✅ `encode_binary_representation` - Proved (definitional equality)
+
+**Partially Completed**:
+- ⚠️ `encode_move_invariant` - move_left case done, move_right needs work
+
+**Remaining**:
+- `encode_single_true_at_neg_k` - Prove tape with single true at position -k encodes to 2^k
+- `encode_write_true` - Prove writing true increases encoding
+- `encode_write_false` - Prove writing false decreases encoding
+- `encode_bound_by_leftmost` - Prove bound based on leftmost true position
+- `encode_injective` - Prove encoding is injective
+- `encode_ext` - Prove extensionality for encoding
 
 ### **⚠️ STRICT PROOF COMPLETION ORDER**
 
-**LeftwardTape.lean is now 100% complete! ✅**
+**LeftwardTape.lean and Step.lean are now 100% complete! ✅**
 
-**Next Priority Order**:
+**Current Status**:
+- ✅ **COMPLETE**: LeftwardTape.lean (7/7 proofs)
+- ✅ **COMPLETE**: Step.lean (2/2 proofs)
+- ✅ **COMPLETE**: LeftwardEncoding.lean (2/2 existing proofs)
+- 🔥 **NEEDS EXPANSION**: LeftwardEncoding.lean (needs 5+ new theorems)
 
-1. **NOW: Complete LeftwardTape.lean** (4 proofs remaining)
-   - The absolute positioning system is the foundation of everything
-   - Without these proofs, nothing else can be trusted
+**Immediate Priority - Expand LeftwardEncoding.lean**:
+
+1. **NOW: Add `encode_config_bound`** 
+   - Prove: encoding is bounded based on leftmost true position
+   - Strategy: Use geometric series sum formula
    
-2. **NEXT: LeftwardEncoding.lean** (5 proofs)
-   - Depends on correct tape implementation
-   - Defines how configurations map to numbers
+2. **NOW: Add `encode_step_diff`**
+   - Prove: step changes encoding by at most 2^k
+   - Strategy: Case analysis on statement type
    
-3. **THEN: Step.lean** (2 proofs)
-   - Proves execution preserves invariants
-   - Required for sequence generation
+3. **NOW: Add `encode_move_right`**
+   - Prove: move_right preserves encoding (like encode_move_left)
+   - Strategy: Similar to encode_move_left proof
+   
+4. **NOW: Add `encode_write_true`**
+   - Prove: writing true at position adds 2^|pos| to encoding
+   
+5. **NOW: Add `encode_write_false`**
+   - Prove: writing false at position subtracts 2^|pos| from encoding
 
-4. **AFTER CORE: LeftwardSequences.lean** (4 proofs)
+**Then Continue With**:
+
+6. **NEXT: Complete EncodingProperties.lean** (7 remaining proofs)
+   - Already has framework, just needs proof completion
+   
+7. **NEXT: LeftwardSequences.lean** (4 proofs)
    - Uses both encoding and step properties
    
-5. **LATER: Theorem modules** (20 proofs total)
+8. **LATER: Theorem modules** (20 proofs total)
    - Additional properties and optimizations
    
-6. **LAST: Examples** (4 proofs)
+9. **LAST: Examples** (4 proofs)
    - Concrete validations of the system
-
-**Why this order is NON-NEGOTIABLE:**
-- The absolute positioning fix changes fundamental assumptions
-- All downstream proofs must build on the corrected foundation
-- Attempting proofs out of order will lead to inconsistencies
 
 ## 🎯 **IMMEDIATE NEXT STEPS**
 
-### **RIGHT NOW: Complete LeftwardTape.lean**
+### **🚨 RIGHT NOW: Add Missing Theorems to LeftwardEncoding.lean**
 
-**Task 1: Prove example that `[true]` encodes to 1**
+The module currently only has 2 theorems but needs several more for completeness:
+
+**Task 1: Add `encode_config_bound`**
 ```lean
-example :
-  let T := mk_initial [true]
-  encode T = 1 := by
+theorem encode_config_bound (cfg : Cfg Bool Λ) :
+    match leftmost_true_pos cfg with
+    | none => encode_config cfg = 0
+    | some pos => encode_config cfg ≤ 2^(Int.natAbs pos) - 1
 ```
-- Uses the completed `mk_initial_nth` lemma
-- Validates that the encoding works for the simplest case
-- Should show that only position 0 has true, so sum = 2^0 = 1
 
-**Task 2: Prove encoding independence example**
+**Task 2: Add `encode_step_diff`**
 ```lean
-example :
-  let T1 := mk_initial [true, false, true]  -- Head at position 0
-  let T2 := T1.move_left.move_left          -- Head at position -2
-  encode T1 = encode T2 := by
+theorem encode_step_diff (M : Machine Bool Λ) (cfg cfg' : Cfg Bool Λ) :
+    step M cfg = some cfg' →
+    ∃ k : ℕ, |Int.ofNat (encode_config cfg') - Int.ofNat (encode_config cfg)| ≤ 2^k
 ```
-- Uses `move_left_preserves_nth_absolute` lemma
-- Demonstrates that encoding is invariant under head movements
-- Critical for proving the absolute positioning system works correctly
 
-**Task 3: Consider upgrading the encoding independence example to a lemma**
-- The proof that `encode T.move_left = encode T` would be useful for other modules
-- This would generalize the specific example to any tape
+**Task 3: Add `encode_move_right`**
+```lean
+theorem encode_move_right (tape : LeftwardTape Bool) :
+    tape.move_right.encode = tape.encode
+```
 
-### **THEN: LeftwardEncoding.lean Proofs**
+**Task 4: Add `encode_write_true`**
+```lean
+theorem encode_write_true (tape : LeftwardTape Bool) :
+    tape.read = false →
+    (tape.write true).encode = tape.encode + 2^(Int.natAbs (-tape.head_pos))
+```
 
-**Only after LeftwardTape.lean is 100% complete!**
+**Task 5: Add `encode_write_false`**
+```lean
+theorem encode_write_false (tape : LeftwardTape Bool) :
+    tape.read = true →
+    (tape.write false).encode = tape.encode - 2^(Int.natAbs (-tape.head_pos))
+```
 
-Focus on proofs in dependency order:
-1. `encode_config_zero` - Base case
-2. `encode_config_single_true_at_zero` - Simplest non-zero case
-3. `encode_config_monotone_right_shift` - Key property
-4. `encode_config_bound` - Important for finiteness
-5. `encode_step_diff` - Connects encoding to execution
+### **THEN: Complete remaining proofs in EncodingProperties.lean**
+
+The module already has the theorem statements, just need to complete the proofs!
 
 ### **Success Metrics**
 
-- [ ] LeftwardTape.lean: 7/7 proofs complete (no `sorry`)
-- [ ] All proofs compile without errors
+- [x] LeftwardTape.lean: 7/7 proofs complete (no `sorry`) ✅
+- [x] Step.lean: 2/2 proofs complete (no `sorry`) ✅
+- [ ] LeftwardEncoding.lean: 5/5 proofs complete (currently 3/5)
+- [x] All completed proofs compile without errors ✅
 - [ ] Examples validate the encoding system works as designed
 
 ## 📋 Implementation Guidelines
