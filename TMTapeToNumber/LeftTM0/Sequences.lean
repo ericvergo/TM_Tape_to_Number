@@ -47,7 +47,9 @@ theorem sequence_monotone_steps (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (
     ∀ k ≥ max n m, sequence M init_cfg k = sequence M init_cfg (max n m) := by sorry
 
 theorem sequence_bounded_growth (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
-    sequence M init_cfg t ≤ 2^(t + Int.natAbs (leftmost_true_pos init_cfg)) := by sorry
+    match leftmost_true_pos init_cfg with
+    | none => sequence M init_cfg t ≤ 2^t
+    | some pos => sequence M init_cfg t ≤ 2^(t + Int.natAbs pos) := by sorry
 
 theorem sequence_step_difference_bound (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
     ∃ k : ℕ, |Int.ofNat (sequence M init_cfg (t+1)) - Int.ofNat (sequence M init_cfg t)| ≤ 2^k := by

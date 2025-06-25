@@ -3,6 +3,7 @@
 **Date:** December 2024  
 **Status:** ✅ **Phase 1 Complete - Core Infrastructure Built**  
 **Build Status:** ✅ All modules compile successfully  
+**Encoding:** ✅ **Fixed to use absolute tape positions**
 
 ## 🎯 Project Overview
 
@@ -30,8 +31,12 @@ This project formalizes leftward-unbounded Turing machines that generate integer
 #### **Key Design Decisions**
 1. **Built on TM0**: Leverages `Mathlib.Computability.PostTuringMachine` for proven foundations
 2. **Position constraints**: Enforces `head_pos ≤ 0` invariant in `LeftwardTape`
-3. **Finsupp encoding**: Uses `∑ k ∈ range, if T.nth (-k) then 2^k else 0` for integer encoding
-4. **Noncomputable by design**: Mathematical focus over computational efficiency
+3. **Absolute position encoding**: Uses `∑ i ∈ true_positions_absolute, 2^(Int.natAbs (-i))` where:
+   - Absolute tape position 0 → 2⁰ = 1 (ones place)
+   - Absolute tape position -1 → 2¹ = 2 (twos place)
+   - Encoding is independent of head position
+4. **Finite support**: No hard-coded limits; encoding sums over actual tape support
+5. **Noncomputable by design**: Mathematical focus over computational efficiency
 
 #### **Current Capabilities**
 - ✅ Define leftward-unbounded TM machines using standard TM0 operations
@@ -50,10 +55,48 @@ All theoretical results have `sorry` placeholders - this is intentional for Phas
 - **Machine properties**: Termination and reachability
 - **Powers of 2 verification**: Actual sequence generation correctness
 
-### **Implementation Notes**
-- **Finite approximation**: Encoding uses `Finset.range 100` (positions 0 to -99)
-- **Head position tracking**: Simplified to focus on constraint enforcement
-- **Error handling**: Violations cause immediate halt (design choice)
+### **Recent Updates (December 2024)**
+- **Fixed encoding logic**: Now uses absolute tape positions instead of relative positions
+- **Removed hard-coded values**: Encoding properly handles finite support without arbitrary limits
+- **Added absolute position functions**: `nth_absolute`, `true_positions_absolute` for consistent encoding
+- **Improved type safety**: Functions that can fail (like finding min/max) now return `Option` types
+
+### **Current Proof Status**
+
+| Module | Total Proofs | Completed | Remaining | Priority |
+|--------|--------------|-----------|-----------|----------|
+| LeftwardTape.lean | 4 | 0 | 4 | 🔥 CRITICAL |
+| Encoding.lean | 5 | 0 | 5 | 🔥 CRITICAL |
+| Step.lean | 2 | 0 | 2 | 🔥 HIGH |
+| Sequences.lean | 4 | 0 | 4 | 🟡 MEDIUM |
+| PowersOfTwo.lean | 5 | 0 | 5 | 🔵 LOW |
+| **TOTAL** | **20** | **0** | **20** | - |
+
+## 🛑 **CRITICAL: Proof Completion Order**
+
+### **⚠️ MUST COMPLETE IN THIS ORDER:**
+
+1. **FIRST: Core Module Proofs** (LeftwardTape.lean, Encoding.lean)
+   - These define the fundamental encoding and its properties
+   - All other proofs depend on these being correct
+   - DO NOT skip to sequences or examples
+
+2. **SECOND: Step Module Proofs** (Step.lean)
+   - These establish how machines execute
+   - Required before proving anything about sequences
+
+3. **THIRD: Sequence Module Proofs** (Sequences.lean)
+   - These depend on both encoding and step properties
+   - Required before verifying any examples
+
+4. **ONLY THEN: Example Proofs** (PowersOfTwo.lean, etc.)
+   - These rely on all core infrastructure proofs
+   - Will be impossible to prove correctly without the foundation
+
+**Why this order is mandatory:**
+- Later proofs reference earlier ones
+- Skipping ahead leads to circular dependencies
+- Core proofs establish the invariants that everything else assumes
 
 ## 🎯 Next Steps & Roadmap
 
@@ -282,30 +325,37 @@ theorem my_theorem (args : Types) : conclusion := by
 
 ### **Immediate Next Steps (Week 1)**
 
-1. **Create the Theorems directory**:
-   ```bash
-   mkdir TMTapeToNumber/Theorems
+1. **Complete proofs in LeftwardTape.lean**:
+   ```lean
+   -- Priority proofs to complete:
+   theorem finite_support_absolute -- Proves tape has finite support
+   theorem finite_support         -- Compatibility theorem
+   example (encoding = 1)         -- Basic encoding example
+   example (encoding independent) -- Position independence example
    ```
 
-2. **Start with encoding properties**:
+2. **Fix proofs in Encoding.lean**:
    ```lean
-   -- Create TMTapeToNumber/Theorems/EncodingProperties.lean
-   -- Begin with encode_single_bit theorem
+   -- These now use absolute positions:
+   theorem encode_config_zero
+   theorem encode_config_single_true_at_zero
+   theorem encode_config_monotone_right_shift
+   theorem encode_config_bound
+   theorem encode_step_diff
    ```
 
-3. **Set up systematic testing**:
-   ```lean
-   -- Add concrete examples with #check commands
-   -- Verify basic encoding computations
-   ```
+3. **ONLY AFTER core proofs are done**:
+   - Move to Step.lean proofs
+   - Then Sequences.lean proofs
+   - Finally example verification
 
 ### **Development Priority Queue**
-1. 🔥 **High**: `encode_single_bit` and `encode_additive` 
-2. 🔥 **High**: First 3 steps of powers of 2 verification
-3. 🟡 **Medium**: Step property framework
-4. 🟡 **Medium**: Sequence growth bounds
-5. 🔵 **Low**: Additional examples
-6. 🔵 **Low**: Mathlib integration prep
+1. 🔥 **CRITICAL**: Core module proofs (LeftwardTape.lean sorries)
+2. 🔥 **CRITICAL**: Encoding proofs (Encoding.lean sorries)  
+3. 🔥 **High**: Step execution proofs (Step.lean sorries)
+4. 🟡 **Medium**: Sequence generation proofs (Sequences.lean sorries)
+5. 🔵 **Low**: Example verification (only after all above complete)
+6. 🔵 **Low**: Additional examples and theorem files
 
 ---
 

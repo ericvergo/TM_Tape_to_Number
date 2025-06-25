@@ -1,0 +1,1 @@
+- Build lean files immediately after editing them to check for errors. Be cautious about truncating the errors messages because it is easy to lose valuable information.
