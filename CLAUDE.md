@@ -1,5 +1,6 @@
 BEHAVIORS TO EMBODY
 - Build Lean files immediately after editing them to check for errors. NEVER truncate error messages - it is critical to read the full output.
+- **ALWAYS** save build output to a text file using `| tee build_output.txt` for complete error analysis
 - Break up proofs into smaller lemmas to help chunk out work
 - Keep notes in comments about proof attempts that didn't work
 - Always read the ENTIRE build output - every error, warning, and goal state
@@ -12,14 +13,15 @@ BEHAVIORS TO AVOID
 - Truncating or skipping parts of error messages
 - Making assumptions about what an error means without reading it fully
 - Trying to fix multiple errors at once without understanding each one
+- **NEVER** run build commands without saving output to build_output.txt
 
 ITERATIVE PROOF WORKFLOW
 When proving theorems with sorries:
 1. First pass: Read the file completely to understand all theorems that need proving
 2. For each theorem with sorry:
    a. Replace the sorry with a proof attempt
-   b. Build the file with: `lake build <module>` 
-   c. DO NOT truncate the output - read EVERY line of errors/warnings
+   b. **MANDATORY**: Build the file with: `lake build <module> 2>&1 | tee build_output.txt`
+   c. **MANDATORY**: Read build_output.txt completely - EVERY line of errors/warnings
    d. Copy the COMPLETE error message including:
       - The goal state
       - All hypotheses
@@ -33,14 +35,21 @@ When proving theorems with sorries:
    - Looking for similar proofs in the codebase
    - Checking mathlib for relevant theorems
 
+**MANDATORY BUILD COMMAND FORMAT:**
+```
+lake build <module_name> 2>&1 | tee build_output.txt
+```
+
 Example workflow:
 ```
 1. Edit file, attempt proof
-2. Run: lake build TMTapeToNumber.LeftTM0.LeftwardSequences 2>&1 | tee build_output.txt
-3. Read build_output.txt completely
+2. **ALWAYS RUN**: lake build TMTapeToNumber.LeftTM0.LeftwardSequences 2>&1 | tee build_output.txt
+3. **ALWAYS READ**: build_output.txt completely - never skip this step
 4. Address each error based on the full context
 5. Repeat until no errors remain
 ```
+
+**CRITICAL**: Every single build command MUST include `2>&1 | tee build_output.txt` to capture the complete output for analysis. This is non-negotiable for effective debugging.
 
 PROOF STRATEGIES
 - For equality proofs: Consider `rfl`, `simp`, `rw`, or `congr`
