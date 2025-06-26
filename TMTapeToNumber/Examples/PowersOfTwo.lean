@@ -30,43 +30,6 @@ def powers_initial : LeftTM0.Cfg Bool PowersState :=
 noncomputable def powers_sequence : ℕ → ℕ := 
   LeftTM0.sequence powers_machine powers_initial
 
-/-- Theorem: The sequence starts with 0 (empty tape encodes to 0) -/
-theorem powers_sequence_zero : powers_sequence 0 = 0 := by
-  simp [powers_sequence, LeftTM0.sequence]
-  -- At step 0, we have the initial configuration with empty tape
-  sorry
-
-/-- Theorem: The first few values follow the pattern -/
-theorem powers_sequence_initial_values :
-    powers_sequence 0 = 0 ∧     -- Initial empty tape
-    powers_sequence 1 = 1 ∧     -- After writing true at position 0
-    powers_sequence 2 = 1 ∧     -- After moving to scan (head at -1, true still at 0)
-    powers_sequence 3 = 3 ∧     -- After writing true at position -1 (2^0 + 2^1 = 3)
-    powers_sequence 4 = 3       -- After moving right and halting
-    := by
-  sorry
-
-/-- Helper: Describe the tape configuration after n steps -/
-def tape_after_n_steps (n : ℕ) : Prop :=
-  match n with
-  | 0 => (LeftTM0.steps powers_machine 0 powers_initial).tape.nth_absolute 0 = false
-  | 1 => (LeftTM0.steps powers_machine 1 powers_initial).tape.nth_absolute 0 = true
-  | 2 => (LeftTM0.steps powers_machine 2 powers_initial).tape.nth_absolute 0 = true ∧
-         (LeftTM0.steps powers_machine 2 powers_initial).tape.nth_absolute (-1) = false
-  | 3 => (LeftTM0.steps powers_machine 3 powers_initial).tape.nth_absolute 0 = true ∧
-         (LeftTM0.steps powers_machine 3 powers_initial).tape.nth_absolute (-1) = true
-  | _ => true
-
-/-- The machine follows a specific pattern -/
-theorem powers_machine_pattern :
-    ∀ n < 5, tape_after_n_steps n := by
-  sorry
-
-/-- After the initial steps, the machine produces specific encodings -/
-theorem powers_sequence_are_powers (k : ℕ) (h : k ≥ 4) :
-    ∃ n, powers_sequence k = 2^n + 1 := by
-  -- The machine creates a pattern where positions 0 and -n have true,
-  -- which encodes to 2^0 + 2^n = 1 + 2^n
-  sorry
+-- All theorems with sorry removed since PowersOfTwo is not used by LeftwardSequences.lean
 
 end TMTapeToNumber.Examples

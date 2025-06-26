@@ -1,9 +1,11 @@
 import TMTapeToNumber.LeftTM0.Step
+import TMTapeToNumber.LeftTM0.LeftwardTape
 import Mathlib.Data.Finset.Lattice.Basic
 import Mathlib.Data.Fintype.Card
 import Mathlib.Order.MinMax
 import Mathlib.Data.List.MinMax
 import Mathlib.Algebra.GeomSum
+import Mathlib.Computability.Tape
 
 set_option linter.unusedSectionVars false
 
@@ -120,5 +122,94 @@ theorem encode_config_single_true_at_zero (cfg : Cfg Bool Λ) :
   simp only [Finset.sum_singleton]
   -- 2^(Int.natAbs (-0)) = 2^(Int.natAbs 0) = 2^0 = 1
   simp
+
+-- Removed encode_config_bound as encode_bound_by_leftmost in EncodingProperties.lean provides similar functionality
+
+/-- A single step changes the encoding by at most 2^k for some k -/
+theorem encode_step_diff (M : Machine Bool Λ) (cfg cfg' : Cfg Bool Λ) :
+    step M cfg = some cfg' →
+    ∃ k : ℕ, |Int.ofNat (encode_config cfg') - Int.ofNat (encode_config cfg)| ≤ 2^k := by
+  intro h_step
+  -- A step can only: move left/right, write true/false
+  -- Each of these changes encoding by at most 2^|current_position|
+  use Int.natAbs (-cfg.tape.head_pos)
+
+  -- The proof establishes that any single step changes the encoding by at most 2^|head_pos|
+  -- For moves: encoding doesn't change (difference is 0)
+  -- For writes: encoding changes by at most 2^|head_pos|
+
+  -- Unfold the step function to get the statement executed
+  simp only [step] at h_step
+  split_ifs at h_step with h_constraint
+  · -- Case: step_preserves_constraint was true
+    match h_machine : M cfg.q cfg.tape.read with
+    | none =>
+      -- Machine halts, contradiction with h_step
+      simp [h_machine] at h_step
+    | some (q', stmt) =>
+      -- h_step says cfg' = ⟨q', apply_stmt stmt cfg.tape⟩
+      simp [h_machine] at h_step
+      rw [← h_step]
+      -- Now we need to analyze what statement was executed
+      cases stmt with
+      | move dir =>
+        cases dir with
+        | left =>
+          -- Moving left doesn't change encoding
+          simp only [step.apply_stmt]
+          -- encode_config cfg' = encode (move_left cfg.tape)
+          -- encode_config cfg = encode cfg.tape
+          simp only [encode_config]
+          -- We know that move_left preserves encoding from encode_move_left
+          rw [LeftwardTape.encode_move_left]
+          -- Now |encode cfg.tape - encode cfg.tape| = 0 ≤ 2^k for any k
+          simp
+        | right =>
+          -- Moving right doesn't change encoding
+          simp only [step.apply_stmt, encode_config]
+          -- We need to prove that encode move_right = encode original
+          -- This follows from the fact that move_right preserves absolute tape content
+          have h_encode_eq : LeftwardTape.encode cfg.tape.move_right = LeftwardTape.encode cfg.tape := by
+            -- The encoding depends only on absolute positions
+            simp only [LeftwardTape.encode]
+            -- true_positions_absolute are the same for both tapes
+            congr 1
+            ext i
+            simp only [LeftwardTape.true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset]
+            constructor
+            · intro ⟨hmem, hle, htrue⟩
+              refine ⟨?_, hle, ?_⟩
+              · -- Show membership in finite support
+                simp only [Set.mem_setOf, LeftwardTape.has_content_at_absolute] at hmem ⊢
+                rw [← LeftwardTape.move_right_preserves_nth_absolute cfg.tape i]
+                exact hmem
+              · -- Show the value is true
+                rw [← LeftwardTape.move_right_preserves_nth_absolute cfg.tape i]
+                exact htrue
+            · intro ⟨hmem, hle, htrue⟩
+              refine ⟨?_, hle, ?_⟩
+              · -- Show membership in finite support
+                simp only [Set.mem_setOf, LeftwardTape.has_content_at_absolute] at hmem ⊢
+                rw [LeftwardTape.move_right_preserves_nth_absolute cfg.tape i]
+                exact hmem
+              · -- Show the value is true
+                rw [LeftwardTape.move_right_preserves_nth_absolute cfg.tape i]
+                exact htrue
+          -- Now use this equality
+          rw [h_encode_eq]
+          -- |encode cfg.tape - encode cfg.tape| = 0 ≤ 2^k for any k
+          simp
+      | write a =>
+        -- Writing can change the encoding by 2^|head_pos| at most
+        simp only [step.apply_stmt, encode_config]
+
+        -- The key insight: writing at absolute position p can only change bit p in the encoding
+        -- The absolute position we're writing at is cfg.tape.head_pos (which is ≤ 0)
+        -- This position contributes 2^(-cfg.tape.head_pos) to the encoding
+
+        -- We'll prove that |encode(after) - encode(before)| ≤ 2^(-cfg.tape.head_pos)
+        -- There are 4 cases based on current value and what we're writing
+
+        sorry -- TODO: complete the write cases
 
 end LeftTM0

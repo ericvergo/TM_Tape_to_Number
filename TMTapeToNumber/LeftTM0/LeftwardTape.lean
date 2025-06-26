@@ -349,6 +349,22 @@ lemma move_left_preserves_nth_absolute (T : LeftwardTape Γ) (i : ℤ) :
   rw [Tape.move_left_nth]
   ring_nf
 
+/-- Moving right preserves absolute tape content -/
+lemma move_right_preserves_nth_absolute (T : LeftwardTape Γ) (i : ℤ) :
+    T.move_right.nth_absolute i = T.nth_absolute i := by
+  simp only [nth_absolute, move_right]
+  -- move_right either moves the head right by 1 (if head_pos < 0) or does nothing
+  split_ifs with h_can_move
+  · -- Case: head_pos < 0, so we can move right
+    -- move_right increases head_pos by 1 and shifts tape indexing
+    -- nth_absolute compensates: (i - (head_pos + 1)) = (i - head_pos) - 1
+    -- And Tape.move_right shifts indexing by +1, so they cancel out
+    rw [Tape.move_right_nth]
+    ring_nf
+  · -- Case: head_pos ≥ 0, so we cannot move right (tape unchanged)
+    -- Since move_right returns T unchanged when head_pos ≥ 0
+    rfl
+
 /-- Moving the head left preserves the encoding -/
 theorem encode_move_left (T : LeftwardTape Bool) :
   encode T.move_left = encode T := by

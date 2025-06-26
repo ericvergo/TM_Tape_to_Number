@@ -1,0 +1,13 @@
+✖ [913/913] Building TMTapeToNumber.LeftTM0.LeftwardEncoding
+trace: .> LEAN_PATH=/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Cli/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/batteries/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Qq/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/aesop/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/importGraph/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/plausible/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/mathlib/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean /Users/eric/.elan/toolchains/leanprover--lean4---v4.21.0-rc3/bin/lean -Dpp.unicode.fun=true -DautoImplicit=false /Users/eric/Documents/GitHub/TM_Tape_to_Number/TMTapeToNumber/LeftTM0/LeftwardEncoding.lean -R /Users/eric/Documents/GitHub/TM_Tape_to_Number -o /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/LeftTM0/LeftwardEncoding.olean -i /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/LeftTM0/LeftwardEncoding.ilean -c /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/ir/TMTapeToNumber/LeftTM0/LeftwardEncoding.c --json
+error: TMTapeToNumber/LeftTM0/LeftwardEncoding.lean:143:64: type mismatch
+  h_step
+has type
+  { q := q', tape := step.apply_stmt stmt cfg.tape } = cfg' : Prop
+but is expected to have type
+  cfg' = { q := q', tape := step.apply_stmt stmt cfg.tape } : Prop
+error: TMTapeToNumber/LeftTM0/LeftwardEncoding.lean:212:2: no goals to be solved
+error: Lean exited with code 1
+Some required builds logged failures:
+- TMTapeToNumber.LeftTM0.LeftwardEncoding
+error: build failed
