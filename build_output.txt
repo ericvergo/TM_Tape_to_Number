@@ -1,50 +1,7 @@
-⚠ [913/915] Replayed TMTapeToNumber.LeftTM0.LeftwardEncoding
-warning: TMTapeToNumber/LeftTM0/LeftwardEncoding.lean:129:8: declaration uses 'sorry'
-✖ [915/915] Building TMTapeToNumber.LeftTM0.LeftwardSequences
-trace: .> LEAN_PATH=/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Cli/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/batteries/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Qq/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/aesop/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/importGraph/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/plausible/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/mathlib/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean /Users/eric/.elan/toolchains/leanprover--lean4---v4.21.0-rc3/bin/lean -Dpp.unicode.fun=true -DautoImplicit=false /Users/eric/Documents/GitHub/TM_Tape_to_Number/TMTapeToNumber/LeftTM0/LeftwardSequences.lean -R /Users/eric/Documents/GitHub/TM_Tape_to_Number -o /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/LeftTM0/LeftwardSequences.olean -i /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/LeftTM0/LeftwardSequences.ilean -c /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/ir/TMTapeToNumber/LeftTM0/LeftwardSequences.c --json
-error: TMTapeToNumber/LeftTM0/LeftwardSequences.lean:84:6: omega could not prove the goal:
-a possible counterexample may satisfy the constraints
-  b ≥ 0
-  a ≥ 1
-  a - b ≤ -1
-  2*a - b ≥ 1
-where
- a := ↑2 ^ t
- b := ↑(sequence M init_cfg t)
-error: TMTapeToNumber/LeftTM0/LeftwardSequences.lean:112:6: omega could not prove the goal:
-a possible counterexample may satisfy the constraints
-  b ≥ 0
-  a ≥ 1
-  a - b ≤ -1
-  2*a - b ≥ 1
-where
- a := ↑2 ^ (t + pos.natAbs)
- b := ↑(sequence M init_cfg t)
-error: TMTapeToNumber/LeftTM0/LeftwardSequences.lean:131:2: unsolved goals
-case h
-Λ : Type u_1
-inst✝ : Inhabited Λ
-M : Machine Bool Λ
-init_cfg : Cfg Bool Λ
-t : ℕ
-cfg_t : Cfg Bool Λ := steps M t init_cfg
-h_halt : step M cfg_t = none
-⊢ |↑(encode_config
-            (match step M (steps M t init_cfg) with
-            | none => steps M t init_cfg
-            | some cfg' => cfg')) -
-        ↑(encode_config (steps M t init_cfg))| ≤
-    1
-error: TMTapeToNumber/LeftTM0/LeftwardSequences.lean:145:34: Application type mismatch: In the application
-  Exists.intro cfg' h_step'
-the argument
-  h_step'
-has type
-  step M cfg_t = some cfg' : Prop
-but is expected to have type
-  some cfg' = some cfg' : Prop
-error: TMTapeToNumber/LeftTM0/LeftwardSequences.lean:153:4: no goals to be solved
-error: Lean exited with code 1
-Some required builds logged failures:
-- TMTapeToNumber.LeftTM0.LeftwardSequences
-error: build failed
+⚠ [913/920] Replayed TMTapeToNumber.LeftwardEncoding.Basic
+warning: TMTapeToNumber/LeftwardEncoding/Basic.lean:129:8: declaration uses 'sorry'
+⚠ [917/920] Built TMTapeToNumber.LeftwardSequences.Theorems
+warning: TMTapeToNumber/LeftwardSequences/Theorems.lean:9:8: declaration uses 'sorry'
+✔ [918/920] Built TMTapeToNumber.Basic
+✔ [919/920] Built TMTapeToNumber
+Build completed successfully.

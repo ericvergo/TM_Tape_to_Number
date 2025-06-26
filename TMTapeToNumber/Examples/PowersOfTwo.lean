@@ -1,4 +1,4 @@
-import TMTapeToNumber.LeftTM0.LeftwardSequences
+import TMTapeToNumber.LeftwardSequences.Basic
 
 namespace TMTapeToNumber.Examples
 
