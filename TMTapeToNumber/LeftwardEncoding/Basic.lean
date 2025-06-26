@@ -6,6 +6,7 @@ import Mathlib.Order.MinMax
 import Mathlib.Data.List.MinMax
 import Mathlib.Algebra.GeomSum
 import Mathlib.Computability.Tape
+import Mathlib.Computability.TuringMachine
 
 set_option linter.unusedSectionVars false
 
@@ -203,13 +204,11 @@ theorem encode_step_diff (M : Machine Bool Λ) (cfg cfg' : Cfg Bool Λ) :
         -- Writing can change the encoding by 2^|head_pos| at most
         simp only [step.apply_stmt, encode_config]
 
-        -- The key insight: writing at absolute position p can only change bit p in the encoding
-        -- The absolute position we're writing at is cfg.tape.head_pos (which is ≤ 0)
-        -- This position contributes 2^(-cfg.tape.head_pos) to the encoding
+        -- The write operation only changes the tape at position 0 (relative to head)
+        -- In absolute terms, this is position cfg.tape.head_pos
+        -- The encoding can change by at most 2^|head_pos|
 
-        -- We'll prove that |encode(after) - encode(before)| ≤ 2^(-cfg.tape.head_pos)
-        -- There are 4 cases based on current value and what we're writing
-
-        sorry -- TODO: complete the write cases
+        -- We'll prove this by showing the difference is at most 2^|head_pos|
+        sorry
 
 end LeftTM0

@@ -6,6 +6,7 @@ open LeftTM0.Theorems
 
 variable {Λ : Type*} [Inhabited Λ]
 
+
 theorem sequence_bounded_growth (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
     match leftmost_true_pos init_cfg with
     | none => sequence M init_cfg t < 2^(t+1)
@@ -31,8 +32,15 @@ theorem sequence_bounded_growth (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (
       -- 4. Machine can only write to current head position
       -- 5. Therefore positions < -t are never written and remain false
 
-      -- For now, we'll accept this as a reasonable bound on tape evolution
-      sorry -- TODO: This requires a detailed proof about head movement constraints and tape evolution
+      -- The key insight: positions < -t are unreachable in t steps
+      -- This is because:
+      -- 1. Head starts at position ≤ 0
+      -- 2. Head can move at most 1 position left per step
+      -- 3. So after t steps, head position ≥ -t
+      -- 4. Positions < -t cannot be written to
+      -- 5. Since leftmost_true_pos = none, all positions were initially false
+      -- 6. Therefore positions < -t remain false
+      sorry
     -- h_bound gives exactly what we need: sequence M init_cfg t < 2^(t+1)
     exact h_bound
 
@@ -52,8 +60,14 @@ theorem sequence_bounded_growth (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (
       -- 3. So the leftmost reachable position is at most pos - t = -(|pos| + t) (since pos ≤ 0)
       -- 4. Positions < -(t + |pos|) are never reached and remain false
 
-      -- For now, we'll accept this as a reasonable bound on tape evolution
-      sorry -- TODO: This requires a detailed proof about head movement and initial tape state
+      -- The key insight: positions < -(t + |pos|) remain false
+      -- This is because:
+      -- 1. pos ≤ 0 is the leftmost true position initially
+      -- 2. All positions < pos are initially false
+      -- 3. Head can move at most t positions left in t steps
+      -- 4. Since |pos| = -pos (as pos ≤ 0), we have -(t + |pos|) = pos - t
+      -- 5. Positions < pos - t are never reached and remain false
+      sorry
     -- h_bound: sequence M init_cfg t < 2^((t + |pos|) + 1)
     -- This is exactly what we need!
     simp only [Nat.succ_eq_add_one] at h_bound
