@@ -1,5 +1,4 @@
 ⚠ [916/919] Replayed TMTapeToNumber.LeftwardEncoding.Basic
 warning: TMTapeToNumber/LeftwardEncoding/Basic.lean:130:8: declaration uses 'sorry'
-⚠ [919/919] Built TMTapeToNumber.LeftwardSequences.Theorems
-warning: TMTapeToNumber/LeftwardSequences/Theorems.lean:10:8: declaration uses 'sorry'
+✔ [919/919] Built TMTapeToNumber.LeftwardSequences.Theorems
 Build completed successfully.

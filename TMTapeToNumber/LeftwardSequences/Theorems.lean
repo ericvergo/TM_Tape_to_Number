@@ -6,116 +6,6 @@ open LeftTM0.Theorems
 
 variable {Λ : Type*} [Inhabited Λ]
 
-
-theorem sequence_bounded_growth (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
-    match leftmost_true_pos init_cfg with
-    | none => sequence M init_cfg t < 2^(t+1)
-    | some pos => sequence M init_cfg t < 2^(t + Int.natAbs pos + 1) := by
-  -- The key insight: after t steps, the leftmost true position can be at most
-  -- t positions to the left of the initial leftmost position
-
-  match h_leftmost : leftmost_true_pos init_cfg with
-  | none =>
-    -- No initial true positions, so all positions > 0 are false initially
-    -- After t steps, leftmost true can be at most at position -t
-    unfold sequence
-    -- Apply encode_bound_by_leftmost with n = t
-    have h_bound : sequence M init_cfg t < 2^t.succ := by
-      apply encode_bound_by_leftmost
-      intro i hi
-      -- Need to show: (steps M t init_cfg).tape.nth_absolute i = false for all i < -t
-      -- This is the key insight about tape evolution that needs to be proven
-      -- The argument is:
-      -- 1. leftmost_true_pos init_cfg = none means all positions initially have false
-      -- 2. The head starts at position ≤ 0 (from LeftwardTape constraint)
-      -- 3. In t steps, head can move at most t positions left, so final position ≥ -t
-      -- 4. Machine can only write to current head position
-      -- 5. Therefore positions < -t are never written and remain false
-
-      -- The key insight: positions < -t are unreachable in t steps
-      -- This is because:
-      -- 1. Head starts at position ≤ 0
-      -- 2. Head can move at most 1 position left per step
-      -- 3. So after t steps, head position ≥ -t
-      -- 4. Positions < -t cannot be written to
-      -- 5. Since leftmost_true_pos = none, all positions were initially false
-      -- 6. Therefore positions < -t remain false
-      sorry
-    -- h_bound gives exactly what we need: sequence M init_cfg t < 2^(t+1)
-    exact h_bound
-
-  | some pos =>
-    -- Initial leftmost true is at position pos (which is ≤ 0)
-    -- After t steps, leftmost true can be at most at position pos - t
-    unfold sequence
-    -- Apply encode_bound_by_leftmost with n = t + |pos|
-    have h_bound : sequence M init_cfg t < 2^(t + Int.natAbs pos).succ := by
-      apply encode_bound_by_leftmost
-      intro i hi
-      -- Need to show: (steps M t init_cfg).tape.nth_absolute i = false
-      -- for all i < -(t + |pos|)
-      -- The argument is:
-      -- 1. pos is the leftmost true position initially, so all positions < pos are false
-      -- 2. The head starts at position ≤ 0 and can move at most t positions left in t steps
-      -- 3. So the leftmost reachable position is at most pos - t = -(|pos| + t) (since pos ≤ 0)
-      -- 4. Positions < -(t + |pos|) are never reached and remain false
-
-      -- The key insight: positions < -(t + |pos|) remain false
-      -- This is because:
-      -- 1. pos ≤ 0 is the leftmost true position initially
-      -- 2. All positions < pos are initially false
-      -- 3. Head can move at most t positions left in t steps
-      -- 4. Since |pos| = -pos (as pos ≤ 0), we have -(t + |pos|) = pos - t
-      -- 5. Positions < pos - t are never reached and remain false
-      sorry
-    -- h_bound: sequence M init_cfg t < 2^((t + |pos|) + 1)
-    -- This is exactly what we need!
-    simp only [Nat.succ_eq_add_one] at h_bound
-    exact h_bound
-
-theorem sequence_step_difference_bound (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
-    ∃ k : ℕ, |Int.ofNat (sequence M init_cfg (t+1)) - Int.ofNat (sequence M init_cfg t)| ≤ 2^k := by
-  -- The difference between consecutive sequence values comes from a single TM step
-  unfold sequence
-  -- sequence M init_cfg (t+1) = encode_config (steps M (t+1) init_cfg)
-  -- sequence M init_cfg t = encode_config (steps M t init_cfg)
-
-  -- steps M (t+1) init_cfg = step_or_stay M (steps M t init_cfg)
-  rw [steps_succ]
-
-  -- Now we need to bound |encode_config (step_or_stay M cfg_t) - encode_config cfg_t|
-  -- where cfg_t = steps M t init_cfg
-  let cfg_t := steps M t init_cfg
-
-  -- Case analysis on whether the machine halts at cfg_t
-  by_cases h_halt : is_terminal M cfg_t
-  · -- Machine has halted, so step_or_stay returns cfg_t unchanged
-    unfold is_terminal at h_halt
-    simp only [step_or_stay, h_halt, cfg_t]
-    -- The goal becomes |encode_config cfg_t - encode_config cfg_t| ≤ 1
-    use 0
-    simp
-
-  · -- Machine hasn't halted, so step produces a new configuration
-    unfold is_terminal at h_halt
-    push_neg at h_halt
-    -- h_halt : step M cfg_t ≠ none, so ∃ cfg', step M cfg_t = some cfg'
-    -- Since the machine doesn't halt, step produces some configuration
-    cases h_step_eq : step M cfg_t with
-    | none => exact absurd h_step_eq h_halt
-    | some cfg' =>
-      -- Now we have step M cfg_t = some cfg'
-      have h_eq : step_or_stay M cfg_t = cfg' := by
-        simp only [step_or_stay, h_step_eq]
-
-      -- Substitute cfg_t and use h_eq
-      simp only [cfg_t, h_eq]
-
-      -- Now apply encode_step_diff
-      have h_diff := encode_step_diff M cfg_t cfg' h_step_eq
-      obtain ⟨k, hk⟩ := h_diff
-      use k
-
 /-- A sequence is eventually constant if the machine halts -/
 theorem sequence_eventually_constant_if_halts (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) :
     (∃ n, is_terminal M (steps M n init_cfg)) →
@@ -160,5 +50,256 @@ theorem sequence_eventually_constant_if_halts (M : Machine Bool Λ) (init_cfg : 
       simp only [step_or_stay, h_terminal']
 
   exact h_fixed m h_m
+
+
+/-- The head position after k steps is bounded by initial position minus k -/
+lemma head_pos_bound (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (k : ℕ) :
+    (steps M k init_cfg).tape.head_pos ≥ init_cfg.tape.head_pos - k := by
+  induction k with
+  | zero =>
+    simp only [steps, Function.iterate_zero]
+    simp
+  | succ k' ih =>
+    simp only [steps, Function.iterate_succ_apply']
+    -- After one more step from (steps M k' init_cfg)
+    have h_one_step : (step_or_stay M (steps M k' init_cfg)).tape.head_pos ≥
+                     (steps M k' init_cfg).tape.head_pos - 1 := by
+      -- A single step can move left by at most 1
+      simp only [step_or_stay]
+      split
+      · -- step returns none, config unchanged
+        simp
+      · -- step returns some cfg'
+        rename_i cfg' h_step_some
+        -- Analyze what step does
+        simp only [step] at h_step_some
+        split_ifs at h_step_some with h_constraint
+        · -- step_preserves_constraint was true
+          match h_machine : M (steps M k' init_cfg).q (steps M k' init_cfg).tape.read with
+          | none => simp [h_machine] at h_step_some
+          | some (q', stmt) =>
+            simp [h_machine] at h_step_some
+            rw [← h_step_some]
+            cases stmt with
+            | move dir =>
+              cases dir with
+              | left =>
+                -- Moving left decreases head_pos by 1
+                simp only [step.apply_stmt, LeftwardTape.move_left]
+                linarith
+              | right =>
+                -- Moving right increases head_pos by 1 (or stays same)
+                simp only [step.apply_stmt, LeftwardTape.move_right]
+                split_ifs
+                · -- Can move right
+                  linarith
+                · -- Cannot move right, position unchanged
+                  linarith
+            | write a =>
+              -- Writing doesn't change head position
+              simp only [step.apply_stmt, LeftwardTape.write]
+              linarith
+    calc (step_or_stay M (steps M k' init_cfg)).tape.head_pos
+      ≥ (steps M k' init_cfg).tape.head_pos - 1 := h_one_step
+      _ ≥ init_cfg.tape.head_pos - k' - 1 := by linarith [ih]
+      _ = init_cfg.tape.head_pos - (k' + 1) := by ring
+
+/-- Writing to a tape preserves nth at non-zero positions -/
+lemma tape_write_preserves_nth {Γ : Type*} [Inhabited Γ] (tape : Turing.Tape Γ) (a : Γ) (n : ℤ) (h : n ≠ 0) :
+    (tape.write a).nth n = tape.nth n := by
+  -- By definition, tape.write only changes the head (position 0)
+  cases n with
+  | ofNat k =>
+    cases k with
+    | zero => contradiction
+    | succ k' => rfl
+  | negSucc k => rfl
+
+/-- When there are no initial true positions, the sequence is bounded by 2^(t+1) -/
+theorem sequence_bounded_growth_none (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ)
+    (h_none : leftmost_true_pos init_cfg = none)
+    (h_init_head : init_cfg.tape.head_pos = 0) :
+    sequence M init_cfg t < 2^(t+1) := by
+  -- No initial true positions, so all positions ≤ 0 are false initially
+  -- After t steps, leftmost true can be at most at position -t
+  unfold sequence
+  -- Apply encode_bound_by_leftmost with n = t
+  have h_bound : sequence M init_cfg t < 2^t.succ := by
+    apply encode_bound_by_leftmost
+    intro i hi
+    -- When leftmost_true_pos is none, there are no true positions initially
+    -- First, establish that all positions ≤ 0 are false initially
+    have h_init_all_false : ∀ j ≤ 0, init_cfg.tape.nth_absolute j = false := by
+      intro j hj
+      by_contra h_not_false
+      -- If j were true, then leftmost_true_pos would find it
+      push_neg at h_not_false
+      have h_j_true : init_cfg.tape.nth_absolute j = true := by
+        cases h : init_cfg.tape.nth_absolute j with
+        | true => rfl
+        | false => exact absurd h h_not_false
+      -- j would be in true_positions_absolute
+      have h_j_in : j ∈ init_cfg.tape.true_positions_absolute := by
+        simp only [LeftwardTape.true_positions_absolute, Finset.mem_filter]
+        refine ⟨?_, hj, h_j_true⟩
+        simp only [Set.Finite.mem_toFinset, Set.mem_setOf, LeftwardTape.has_content_at_absolute]
+        rw [h_j_true]
+        simp
+      -- This means true_positions_absolute is non-empty
+      have h_nonempty : init_cfg.tape.true_positions_absolute ≠ ∅ := by
+        intro h_empty
+        rw [h_empty] at h_j_in
+        simp at h_j_in
+      -- So minimum exists, contradicting leftmost_true_pos = none
+      have : ∃ x, leftmost_true_pos init_cfg = some x := by
+        simp only [leftmost_true_pos]
+        -- Since true_positions_absolute is non-empty, its minimum exists
+        have h_list_nonempty : init_cfg.tape.true_positions_absolute.toList ≠ [] := by
+          intro h_empty
+          have : init_cfg.tape.true_positions_absolute = ∅ := by
+            ext x
+            simp only [Finset.notMem_empty, iff_false]
+            intro hx
+            have : x ∈ init_cfg.tape.true_positions_absolute.toList := by
+              exact Finset.mem_toList.mpr hx
+            rw [h_empty] at this
+            simp at this
+          exact h_nonempty this
+        -- For a non-empty list of integers, minimum is some value
+        cases h_min : init_cfg.tape.true_positions_absolute.toList.minimum with
+        | top =>
+          -- If minimum is ⊤, list must be empty
+          -- But we know the list is non-empty, contradiction
+          exfalso
+          -- When List.minimum returns ⊤, the list is empty
+          have h_empty : init_cfg.tape.true_positions_absolute.toList = [] := by
+            exact List.minimum_eq_top.mp h_min
+          exact absurd h_empty h_list_nonempty
+        | coe x =>
+          -- minimum is ↑x, so match returns some x
+          use x
+      obtain ⟨x, hx⟩ := this
+      rw [hx] at h_none
+      cases h_none
+
+    -- Now we know all positions ≤ 0 are initially false
+    -- Since i < -t and t ≥ 0, we have i ≤ 0
+    have hi_le : i ≤ 0 := by linarith
+    have h_init_i_false : init_cfg.tape.nth_absolute i = false := h_init_all_false i hi_le
+
+    -- The key claim: position i remains unchanged after t steps
+    -- This is because the head cannot reach position i in t steps
+    have h_unchanged : (steps M t init_cfg).tape.nth_absolute i = init_cfg.tape.nth_absolute i := by
+      -- We'll prove this by induction on t
+      clear h_init_all_false hi_le h_init_i_false
+      induction t with
+      | zero =>
+        -- Base case: after 0 steps, nothing changes
+        simp only [steps, Function.iterate_zero]
+        -- Goal: (id init_cfg).tape.nth_absolute i = init_cfg.tape.nth_absolute i
+        rfl
+      | succ t' ih =>
+        -- Inductive case: if unchanged after t' steps, still unchanged after t'+1 steps
+        simp only [steps, Function.iterate_succ_apply']
+        -- By IH: (steps M t' init_cfg).tape.nth_absolute i = init_cfg.tape.nth_absolute i
+        have ih' : (steps M t' init_cfg).tape.nth_absolute i = init_cfg.tape.nth_absolute i := by
+          apply ih
+          -- i < -(t'+1) implies i < -t'
+          -- We have: i < -↑(t' + 1) = -(↑t' + 1)
+          -- We need: i < -↑t'
+          have : -(↑(t' + 1) : ℤ) = -(↑t' + 1 : ℤ) := by simp
+          rw [this] at hi
+          linarith
+        -- Now show: (step_or_stay M (steps M t' init_cfg)).tape.nth_absolute i = init_cfg.tape.nth_absolute i
+        rw [← ih']
+        -- It suffices to show: (step_or_stay M (steps M t' init_cfg)).tape.nth_absolute i = (steps M t' init_cfg).tape.nth_absolute i
+
+        -- step_or_stay either returns the same config or takes a step
+        simp only [step_or_stay]
+        split
+        · -- step returns none, config unchanged
+          rfl
+        · -- step returns some cfg'
+          rename_i cfg' h_step
+          -- We need to show cfg'.tape.nth_absolute i = (steps M t' init_cfg).tape.nth_absolute i
+
+          -- Key insight: a step only modifies the position where the head is
+          -- We need to show i ≠ (steps M t' init_cfg).tape.head_pos
+          have h_not_at_head : i ≠ (steps M t' init_cfg).tape.head_pos := by
+            -- We know: i < -(t'+1) = -(t' + 1)
+            -- We'll show: (steps M t' init_cfg).tape.head_pos ≥ -t'
+            -- Therefore: i < -(t' + 1) < -t' ≤ head_pos, so i ≠ head_pos
+            have h_head_bound : (steps M t' init_cfg).tape.head_pos ≥ -(↑t' : ℤ) := by
+              -- Use our head position bound lemma
+              have h := head_pos_bound M init_cfg t'
+              -- We have: (steps M t' init_cfg).tape.head_pos ≥ init_cfg.tape.head_pos - t'
+              -- Since init_cfg.tape.head_pos = 0, we get:
+              -- (steps M t' init_cfg).tape.head_pos ≥ 0 - t' = -t'
+              rw [h_init_head] at h
+              -- h : (steps M t' init_cfg).tape.head_pos ≥ 0 - ↑t'
+              -- We need to show: (steps M t' init_cfg).tape.head_pos ≥ -↑t'
+              convert h using 1
+              simp
+            -- Now: i < -(t'+1) and head_pos ≥ -t'
+            -- We need to show i ≠ head_pos
+            intro h_eq
+            -- If i = head_pos, then head_pos < -(t'+1) and head_pos ≥ -t'
+            -- But -(t'+1) = -(t' + 1) < -t', contradiction
+            have h1 : i < -(↑(t' + 1) : ℤ) := hi
+            have h2 : -(↑(t' + 1) : ℤ) = -(↑t' + 1 : ℤ) := by simp
+            rw [h2] at h1
+            have h3 : -(↑t' + 1 : ℤ) < -(↑t' : ℤ) := by linarith
+            rw [h_eq] at h1
+            linarith
+
+          -- Now use that step preserves positions away from head
+          have h_step_preserves : cfg'.tape.nth_absolute i = (steps M t' init_cfg).tape.nth_absolute i := by
+            -- Analyze what step does
+            -- Note: steps M t' init_cfg = (step_or_stay M)^[t'] init_cfg by definition
+            have h_eq_cfg : steps M t' init_cfg = (step_or_stay M)^[t'] init_cfg := by
+              simp only [steps]
+            rw [← h_eq_cfg] at h_step
+
+            simp only [step] at h_step
+            split_ifs at h_step with h_constraint
+            · -- step_preserves_constraint was true
+              match h_machine : M (steps M t' init_cfg).q (steps M t' init_cfg).tape.read with
+              | none =>
+                rw [h_machine] at h_step
+                simp at h_step
+              | some (q', stmt) =>
+                rw [h_machine] at h_step
+                simp at h_step
+                rw [← h_step]
+                -- cfg' = ⟨q', apply_stmt stmt (steps M t' init_cfg).tape⟩
+                cases stmt with
+                | move dir =>
+                  cases dir with
+                  | left =>
+                    -- Moving left preserves absolute positions
+                    simp only [step.apply_stmt]
+                    exact LeftwardTape.move_left_preserves_nth_absolute _ i
+                  | right =>
+                    -- Moving right preserves absolute positions
+                    simp only [step.apply_stmt]
+                    exact LeftwardTape.move_right_preserves_nth_absolute _ i
+                | write a =>
+                  -- Writing only affects the current head position
+                  simp only [step.apply_stmt, LeftwardTape.write, LeftwardTape.nth_absolute]
+                  -- write changes tape.nth 0 to a, which is tape.nth_absolute head_pos
+                  -- For i ≠ head_pos, nth_absolute i is unchanged
+                  -- We need to show: tape.write a.nth (i - head_pos) = tape.nth (i - head_pos)
+                  -- where tape = (steps M t' init_cfg).tape.tape
+                  have h_not_zero : i - (steps M t' init_cfg).tape.head_pos ≠ 0 := by
+                    intro h_eq
+                    have : i = (steps M t' init_cfg).tape.head_pos := by linarith
+                    exact h_not_at_head this
+                  -- Use our lemma about tape.write preserving nth at non-zero positions
+                  exact tape_write_preserves_nth _ _ _ h_not_zero
+
+          exact h_step_preserves
+
+    rw [h_unchanged, h_init_i_false]
+  exact h_bound
 
 end LeftTM0
