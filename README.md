@@ -155,3 +155,29 @@ import TMTapeToNumber
 -- Example: Define and run a machine
 #check LeftTM0.sequence
 ```
+
+## 📚 Theoretical Background
+
+This work builds on:
+- **Turing Machine Theory**: Classical computational models
+- **Formal Language Theory**: Tape representation and encoding
+- **Sequence Analysis**: Growth bounds and convergence properties
+- **Lean 4 Formalization**: Modern proof assistant techniques
+
+The approach provides a novel perspective on mechanical sequence generation, connecting abstract machine computation to concrete integer sequences through rigorous mathematical formalization.
+
+## 🤝 Contributing
+
+This is a research project in formal verification. Contributions welcome for:
+- Completing remaining theorem proofs
+- Adding new example machines
+- Extending to other tape models
+- Performance optimizations
+
+## 📄 License
+
+[MIT License](./LICENSE)
+
+---
+
+**A formal exploration of the beautiful mathematics hiding in Turing machine tape evolution.**
