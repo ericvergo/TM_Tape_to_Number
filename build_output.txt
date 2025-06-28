@@ -1,4 +1,90 @@
-⚠ [916/919] Replayed TMTapeToNumber.LeftwardEncoding.Basic
-warning: TMTapeToNumber/LeftwardEncoding/Basic.lean:130:8: declaration uses 'sorry'
-✔ [919/919] Built TMTapeToNumber.LeftwardSequences.Theorems
-Build completed successfully.
+✖ [919/919] Building TMTapeToNumber.LeftwardSequences.Theorems
+trace: .> LEAN_PATH=/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Cli/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/batteries/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Qq/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/aesop/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/importGraph/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/plausible/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/mathlib/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean /Users/eric/.elan/toolchains/leanprover--lean4---v4.21.0-rc3/bin/lean -Dpp.unicode.fun=true -DautoImplicit=false /Users/eric/Documents/GitHub/TM_Tape_to_Number/TMTapeToNumber/LeftwardSequences/Theorems.lean -R /Users/eric/Documents/GitHub/TM_Tape_to_Number -o /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/LeftwardSequences/Theorems.olean -i /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/LeftwardSequences/Theorems.ilean -c /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/ir/TMTapeToNumber/LeftwardSequences/Theorems.c --json
+error: TMTapeToNumber/LeftwardSequences/Theorems.lean:325:6: type mismatch
+  h_i
+has type
+  sequence M init_cfg i < 2 ^ (i + 1) : Prop
+but is expected to have type
+  2 ^ (i + 1) < sequence M init_cfg i * 2 : Prop
+error: TMTapeToNumber/LeftwardSequences/Theorems.lean:329:10: tactic 'rewrite' failed, did not find instance of the pattern in the target expression
+  ?n ^ ?m * ?n
+Λ : Type u_1
+inst✝ : Inhabited Λ
+M : Machine Bool Λ
+init_cfg : Cfg Bool Λ
+i j : ℕ
+h : i < j
+h_pos : 0 < sequence M init_cfg i
+h_none : leftmost_true_pos init_cfg = none
+h_init_head : init_cfg.tape.head_pos = 0
+h_i : sequence M init_cfg i < 2 ^ (i + 1)
+h_j : sequence M init_cfg j < 2 ^ (j + 1)
+⊢ sequence M init_cfg i * (2 * 2 ^ (j - i)) = sequence M init_cfg i * 2 ^ (j - i + 1)
+error: TMTapeToNumber/LeftwardSequences/Theorems.lean:332:6: type mismatch
+  Nat.succ_sub h
+has type
+  j.succ - i.succ = (j - i.succ).succ : Prop
+but is expected to have type
+  j - i + 1 = j - i.succ : Prop
+error: TMTapeToNumber/LeftwardSequences/Theorems.lean:335:6: tactic 'apply' failed, could not unify the conclusion of `@Nat.pow_le_pow_left`
+  ?n ^ ?i ≤ ?m ^ ?i
+with the goal
+  2 ^ (j - i.succ) ≤ 2 ^ (j - i)
+
+Note: The full type of `@Nat.pow_le_pow_left` is
+  ∀ {n m : ℕ}, n ≤ m → ∀ (i : ℕ), n ^ i ≤ m ^ i
+case h
+Λ : Type u_1
+inst✝ : Inhabited Λ
+M : Machine Bool Λ
+init_cfg : Cfg Bool Λ
+i j : ℕ
+h : i < j
+h_pos : 0 < sequence M init_cfg i
+h_none : leftmost_true_pos init_cfg = none
+h_init_head : init_cfg.tape.head_pos = 0
+h_i : sequence M init_cfg i < 2 ^ (i + 1)
+h_j : sequence M init_cfg j < 2 ^ (j + 1)
+⊢ 2 ^ (j - i.succ) ≤ 2 ^ (j - i)
+error: TMTapeToNumber/LeftwardSequences/Theorems.lean:310:65: unsolved goals
+case calc.step
+Λ : Type u_1
+inst✝ : Inhabited Λ
+M : Machine Bool Λ
+init_cfg : Cfg Bool Λ
+i j : ℕ
+h : i < j
+h_pos : 0 < sequence M init_cfg i
+h_none : leftmost_true_pos init_cfg = none
+h_init_head : init_cfg.tape.head_pos = 0
+h_i : sequence M init_cfg i < 2 ^ (i + 1)
+h_j : sequence M init_cfg j < 2 ^ (j + 1)
+⊢ sequence M init_cfg i * 2 ^ (j - i) < 2 ^ (j - i) * sequence M init_cfg i
+error: TMTapeToNumber/LeftwardSequences/Theorems.lean:354:72: Application type mismatch: In the application
+  Nat.eq_zero_of_not_pos h_not
+the argument
+  h_not
+has type
+  sequence M init_cfg j ≤ 0 : Prop
+but is expected to have type
+  ¬0 < sequence M init_cfg j : Prop
+error: TMTapeToNumber/LeftwardSequences/Theorems.lean:358:4: linarith failed to find a contradiction
+case inr.h
+Λ : Type u_1
+inst✝ : Inhabited Λ
+M : Machine Bool Λ
+init_cfg : Cfg Bool Λ
+i j : ℕ
+h : i ≤ j
+h_none : leftmost_true_pos init_cfg = none
+h_init_head : init_cfg.tape.head_pos = 0
+h_lt : i < j
+h_i : sequence M init_cfg i < 2 ^ (i + 1)
+h_j : 0 < sequence M init_cfg j
+a✝ : sequence M init_cfg j < sequence M init_cfg i
+⊢ False
+failed
+error: Lean exited with code 1
+Some required builds logged failures:
+- TMTapeToNumber.LeftwardSequences.Theorems
+error: build failed
