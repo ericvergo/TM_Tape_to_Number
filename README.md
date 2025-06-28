@@ -1,14 +1,17 @@
+## 🚨CRITICAL DISCLAIMER🚨 
+
+⚠️ This repository contains mathematical formalizations generated exclusively by LLMs that may be flawed. ⚠️
+
+⚠️ These results should be treated as false until independently verified. ⚠️
+
+⚠️ The authors make no warranty of correctness for any mathematical content in this repository. ⚠️
+
+🛑 Do not cite, use, or rely on these results without manual review. 🛑
+
+
 # TM Tape to Number: Formalizing Turing Machine Integer Sequences
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/user/TM_Tape_to_Number)
-[![Lean 4](https://img.shields.io/badge/Lean-4.21.0-blue)](https://lean-lang.org/)
-[![Progress](https://img.shields.io/badge/progress-92%25-green)](./PROJECT_STATUS.md)
-
-A formal verification project in Lean 4 that formalizes Turing machines generating integer sequences through tape content encoding.
-
-## 🎯 Project Overview
-
-This project explores a fascinating connection between Turing machines and integer sequences. Instead of studying what Turing machines *compute*, we study the *sequences of numbers* they generate by encoding their tape contents at each computation step.
+A formal verification project in Lean 4 that formalizes Turing machines generating integer sequences through tape content encoding. Instead of studying what Turing machines *compute*, we study the *sequences of numbers* they generate by encoding their tape contents at each computation step.
 
 ### The Core Idea
 
@@ -152,29 +155,3 @@ import TMTapeToNumber
 -- Example: Define and run a machine
 #check LeftTM0.sequence
 ```
-
-## 📚 Theoretical Background
-
-This work builds on:
-- **Turing Machine Theory**: Classical computational models
-- **Formal Language Theory**: Tape representation and encoding
-- **Sequence Analysis**: Growth bounds and convergence properties
-- **Lean 4 Formalization**: Modern proof assistant techniques
-
-The approach provides a novel perspective on mechanical sequence generation, connecting abstract machine computation to concrete integer sequences through rigorous mathematical formalization.
-
-## 🤝 Contributing
-
-This is a research project in formal verification. Contributions welcome for:
-- Completing remaining theorem proofs
-- Adding new example machines
-- Extending to other tape models
-- Performance optimizations
-
-## 📄 License
-
-[MIT License](./LICENSE)
-
----
-
-**A formal exploration of the beautiful mathematics hiding in Turing machine tape evolution.**
