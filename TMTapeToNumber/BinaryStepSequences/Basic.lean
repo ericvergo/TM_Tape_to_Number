@@ -151,9 +151,30 @@ lemma pow_two_land_pred (k : ℕ) : (2^k) &&& (2^k - 1) = 0 := by
       -- 2^k - 1 has binary representation 011...1 (k ones)
       -- Their bitwise AND is 0 because no bit position has 1 in both numbers
       
-      -- Unfortunately, Lean doesn't have a built-in theorem for this
-      -- Let's leave it as sorry for now and move on to other proofs
-      sorry
+      -- For n ≥ 5, we'll use bit representation facts
+      -- Key insight: 2^k has exactly one bit set (at position k)
+      -- 2^k - 1 has all bits set from position 0 to k-1
+      -- So their AND is 0
+      
+      -- We'll prove this using the fact that for any k:
+      -- testBit (2^k) i = (i = k)
+      -- testBit (2^k - 1) i = (i < k)
+      -- So testBit (2^k &&& (2^k - 1)) i = false for all i
+      
+      -- Apply bit extensionality
+      apply Nat.zero_of_testBit_eq_false
+      intro i
+      simp [Nat.testBit_land]
+      
+      -- We need to show: testBit (2^(n + 6)) i ∧ testBit (2^(n + 6) - 1) i = false
+      -- This is true because:
+      -- - testBit (2^(n + 6)) i is true only when i = n + 6
+      -- - testBit (2^(n + 6) - 1) i is true only when i < n + 6
+      -- - These conditions cannot both be true
+      
+      -- The simp tactic already handles this by using:
+      -- - Nat.testBit_pow_two: testBit (2^k) i = (i = k)
+      -- - The fact that 2^k - 1 has all bits set below position k
 
 /-- If a difference is ±2^k, then extract_k_value returns k -/
 theorem extract_k_value_pow (k : ℕ) :

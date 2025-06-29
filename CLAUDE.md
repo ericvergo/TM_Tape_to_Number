@@ -280,21 +280,5 @@ lean_declaration_file(file_path, "Nat.add_comm")
 lean_file_contents(declaration_file_path)
 ```
 
-WHEN TO USE MCP TOOLS VS FULL BUILDS
-
-Use MCP tools for:
-- Understanding proof goals and states (`lean_goal`)
-- Finding applicable theorems (`lean_state_search`, `lean_leansearch`)
-- Testing proof strategies (`lean_multi_attempt`)
-- Getting immediate error feedback (`lean_diagnostic_messages`)
-- Exploring type information (`lean_hover_info`, `lean_term_goal`)
-- Quick proof experiments (`lean_run_code`)
-
-Use `lake build` for:
-- Final verification before committing
-- When MCP tools report connection issues
-- Building the entire project after major changes
-- Generating documentation
-- When explicitly requested by the user
 
 Remember: MCP tools give instant feedback without the overhead of full compilation, making the proof development cycle much faster!

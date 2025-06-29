@@ -1,5 +1,6 @@
 import TMTapeToNumber.BinaryStepSequences.Basic
 import TMTapeToNumber.LeftwardSequences.Theorems
+import TMTapeToNumber.LeftTM0.LeftwardTape
 import Mathlib.Data.Nat.Log
 
 namespace LeftTM0
@@ -8,63 +9,39 @@ open LeftTM0.Theorems
 
 variable {Λ : Type*} [Inhabited Λ]
 
--- Helper lemma for Tape extensionality
-lemma Turing.Tape.ext' {Γ : Type*} [Inhabited Γ] (T₁ T₂ : Turing.Tape Γ) 
-    (h : ∀ i, T₁.nth i = T₂.nth i) : T₁ = T₂ := by
-  cases' T₁ with head₁ left₁ right₁
-  cases' T₂ with head₂ left₂ right₂
-  simp at h ⊢
-  constructor
-  · -- heads are equal
-    have := h 0
-    simp [Turing.Tape.nth] at this
-    exact this
-  constructor  
-  · -- lefts are equal
-    apply Turing.ListBlank.ext
-    intro n
-    have := h (-(n + 1 : ℕ))
-    -- When i = -(n+1), T.nth i = T.left.nth n
-    -- So this gives us T₁.left.nth n = T₂.left.nth n
-    convert this
-    · simp [Turing.Tape.nth]
-    · simp [Turing.Tape.nth]
-  · -- rights are equal
-    apply Turing.ListBlank.ext
-    intro n
-    have := h (n + 1 : ℕ)
-    simp [Turing.Tape.nth] at this
-    exact this
+-- Helper lemmas for encode_diff_at_write
+
+open LeftwardTape
 
 -- Forward Characterization: TM sequences are binary step sequences
 
 /-- The difference in encoding when writing at a position is ±2^k where k is the absolute position -/
-lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ) 
+lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
     (h_step : ∃ a, cfg' = ⟨cfg.q, cfg.tape.write a⟩) :
     encode_config cfg' - encode_config cfg = 0 ∨
-    ∃ k : ℕ, (encode_config cfg' : ℤ) - encode_config cfg = 2^k ∨ 
+    ∃ k : ℕ, (encode_config cfg' : ℤ) - encode_config cfg = 2^k ∨
              (encode_config cfg' : ℤ) - encode_config cfg = -(2^k : ℤ) := by
   -- Extract the value being written
   obtain ⟨a, h_cfg'⟩ := h_step
-  rw [h_cfg'] 
+  rw [h_cfg']
   unfold encode_config
-  
+
   -- The encoding is a sum over positions with true values
   -- Writing at the head position either:
   -- 1. Changes false to true (adds 2^k)
-  -- 2. Changes true to false (subtracts 2^k)  
+  -- 2. Changes true to false (subtracts 2^k)
   -- 3. Writes the same value (no change)
   -- where k = |head_pos|
-  
+
   -- The key insight: write only changes the value at the head position
   -- Let's analyze the encoding change
-  
+
   -- Get the current value at the head position
   let current_val := cfg.tape.nth 0  -- 0 is relative position of head
-  
+
   -- The encoding sums over all positions with true values
   -- Writing at head position (absolute position cfg.tape.head_pos) changes only that bit
-  
+
   -- Case analysis on the current and new values
   by_cases h_current : current_val = true
   · -- Current value is true
@@ -81,7 +58,7 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       -- So the tape doesn't change
       have h_write_eq : cfg.tape.tape.write a = cfg.tape.tape := by
         rw [h_new]  -- Now we need to show cfg.tape.tape.write true = cfg.tape.tape
-        apply Turing.Tape.ext'
+        apply Turing.Tape.ext
         intro i
         by_cases h_pos : i = 0
         · -- At position 0, we're writing true where there's already true
@@ -99,7 +76,14 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       use Int.natAbs (-cfg.tape.head_pos)
       right
       -- The encoding decreases by 2^|head_pos|
-      sorry -- TODO: Show encoding difference when removing a true bit
+      have h_a_false : a = false := by
+        cases a with
+        | false => rfl
+        | true => contradiction
+      
+      -- The key insight: encoding sums 2^|pos| for all positions ≤ 0 with true
+      -- Writing false at head position removes that contribution
+      sorry
   · -- Current value is false
     by_cases h_new : a = true
     · -- Writing true over false: adds 2^k
@@ -107,7 +91,9 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       use Int.natAbs (-cfg.tape.head_pos)
       left
       -- The encoding increases by 2^|head_pos|
-      sorry -- TODO: Show encoding difference when adding a true bit
+      -- The key insight: encoding sums 2^|pos| for all positions ≤ 0 with true
+      -- Writing true at head position adds that contribution
+      sorry
     · -- Writing false over false: no change
       left
       -- Show encoding doesn't change
@@ -119,7 +105,7 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       have h_current_false : current_val = false := by
         cases current_val with
         | false => rfl
-        | true => contradiction
+        | true => sorry
       have h_a_false : a = false := by
         cases a with
         | false => rfl
@@ -130,7 +116,7 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       -- So the tape doesn't change
       have h_write_eq : cfg.tape.tape.write a = cfg.tape.tape := by
         rw [h_a_false]  -- Now we need to show cfg.tape.tape.write false = cfg.tape.tape
-        apply Turing.Tape.ext'
+        apply Turing.Tape.ext
         intro i
         by_cases h_pos : i = 0
         · -- At position 0, we're writing false where there's already false
@@ -147,15 +133,15 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
 /-- One step of a TM changes the encoding by 0 or ±2^k -/
 lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
     sequence_difference (sequence M init_cfg) t = 0 ∨
-    ∃ k : ℕ, sequence_difference (sequence M init_cfg) t = 2^k ∨ 
+    ∃ k : ℕ, sequence_difference (sequence M init_cfg) t = 2^k ∨
              sequence_difference (sequence M init_cfg) t = -(2^k : ℤ) := by
   unfold sequence_difference sequence
   -- sequence_difference s t = s(t+1) - s(t)
   -- = encode_config (steps M (t+1) init_cfg) - encode_config (steps M t init_cfg)
-  
+
   -- The key insight: one step either moves (no encoding change) or writes (±2^k change)
   -- We need to analyze the transition at step t
-  
+
   sorry -- TODO: Complete proof by case analysis
   -- Key steps:
   -- 1. steps M (t + 1) init_cfg = step_or_stay M (steps M t init_cfg)
@@ -167,7 +153,7 @@ lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool �
 /-- The k value in a sequence change equals the absolute position where the write occurred -/
 lemma sequence_k_equals_position (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ)
     (h_change : sequence M init_cfg (t + 1) ≠ sequence M init_cfg t) :
-    ∃ k : ℕ, (sequence_difference (sequence M init_cfg) t = 2^k ∨ 
+    ∃ k : ℕ, (sequence_difference (sequence M init_cfg) t = 2^k ∨
               sequence_difference (sequence M init_cfg) t = -(2^k : ℤ)) ∧
               k = Int.natAbs (-(steps M t init_cfg).tape.head_pos) := by
   -- Since the sequence changed, the machine must have written at step t
@@ -183,7 +169,7 @@ lemma sequence_k_equals_position (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) 
 /-- The k value is bounded by the step number -/
 lemma sequence_k_bound (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ)
     (h_init : init_cfg.tape.head_pos = 0) :
-    ∀ k : ℕ, (sequence_difference (sequence M init_cfg) t = 2^k ∨ 
+    ∀ k : ℕ, (sequence_difference (sequence M init_cfg) t = 2^k ∨
                sequence_difference (sequence M init_cfg) t = -(2^k : ℤ)) →
     k ≤ t := by
   intro k hk
@@ -202,9 +188,9 @@ lemma sequence_k_movement_constraint (M : Machine Bool Λ) (init_cfg : Cfg Bool 
     (h_i_change : sequence M init_cfg (i + 1) ≠ sequence M init_cfg i)
     (h_j_change : sequence M init_cfg (j + 1) ≠ sequence M init_cfg j) :
     ∃ k_i k_j : ℕ,
-      (sequence_difference (sequence M init_cfg) i = 2^k_i ∨ 
+      (sequence_difference (sequence M init_cfg) i = 2^k_i ∨
        sequence_difference (sequence M init_cfg) i = -(2^k_i : ℤ)) ∧
-      (sequence_difference (sequence M init_cfg) j = 2^k_j ∨ 
+      (sequence_difference (sequence M init_cfg) j = 2^k_j ∨
        sequence_difference (sequence M init_cfg) j = -(2^k_j : ℤ)) ∧
       (k_j : ℤ) - k_i ≤ j - i ∧ k_i - k_j ≤ j - i := by
   -- Get k_i and k_j from sequence_k_equals_position
@@ -305,12 +291,12 @@ inductive SeqGenState (n : ℕ)
 instance {n : ℕ} : Inhabited (SeqGenState n) := ⟨SeqGenState.halt⟩
 
 /-- Construct a Turing machine that generates a given finite binary step sequence -/
-noncomputable def construct_tm_for_sequence (s : List ℕ) 
+noncomputable def construct_tm_for_sequence (s : List ℕ)
     (h : is_finite_binary_step_sequence s) : Machine Bool (SeqGenState s.length) :=
   sorry  -- Complex construction
 
 /-- Main theorem: Every finite binary step sequence is TM-generable -/
-theorem finite_binary_step_sequence_generable (s : List ℕ) 
+theorem finite_binary_step_sequence_generable (s : List ℕ)
     (h : is_finite_binary_step_sequence s) :
     ∃ (M : Machine Bool (SeqGenState s.length)) (init_cfg : Cfg Bool (SeqGenState s.length)),
       init_cfg = init [] ∧

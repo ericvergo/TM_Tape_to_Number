@@ -68,6 +68,36 @@ def has_content_at (T : LeftwardTape Γ) (i : ℤ) : Prop :=
 def has_content_at_absolute (T : LeftwardTape Γ) (i : ℤ) : Prop :=
   T.nth_absolute i ≠ default
 
+-- Extensionality for Turing.Tape
+lemma Turing.Tape.ext {Γ : Type*} [Inhabited Γ] (T₁ T₂ : Turing.Tape Γ) 
+    (h : ∀ i, T₁.nth i = T₂.nth i) : T₁ = T₂ := by
+  cases' T₁ with head₁ left₁ right₁
+  cases' T₂ with head₂ left₂ right₂
+  simp at h ⊢
+  constructor
+  · -- heads are equal
+    have := h 0
+    simp [Turing.Tape.nth] at this
+    exact this
+  constructor  
+  · -- lefts are equal
+    apply Turing.ListBlank.ext
+    intro n
+    -- For negative indices -(n+1), Tape.nth accesses left.nth n
+    have h_neg := h (-(n + 1 : ℕ))
+    -- Simplify what Tape.nth does for negative arguments
+    have : -(n + 1 : ℕ) = Int.negSucc n := by
+      simp [Int.negSucc_eq]
+    rw [this] at h_neg
+    simp only [Turing.Tape.nth] at h_neg
+    exact h_neg
+  · -- rights are equal
+    apply Turing.ListBlank.ext
+    intro n
+    have := h (n + 1 : ℕ)
+    simp [Turing.Tape.nth] at this
+    exact this
+
 /-- Extensionality for LeftwardTape: two tapes are equal if they have the same values at all positions 
     and the same head position -/
 @[ext]
@@ -82,8 +112,24 @@ theorem ext (T₁ T₂ : LeftwardTape Γ)
   -- Now we need to show tape₁ = tape₂ given that pos₁ = pos₂ and nth values agree
   have : tape₁ = tape₂ := by
     -- Two tapes are equal if their nth functions are equal
-    -- This requires showing the head, left, and right components are equal
-    sorry -- For now, we'll leave this as sorry and use a workaround
+    -- We need to use the fact that h_nth gives us equality for all positions
+    -- Since T.nth i = T.tape.nth i, we have tape₁.nth i = tape₂.nth i for all i
+    
+    -- We'll prove this by showing the components are equal
+    apply Turing.Tape.ext
+    intro i
+    
+    -- Use h_nth with the adjusted index
+    -- Since h_pos tells us pos₁ = pos₂, and T.nth i = T.tape.nth i
+    -- we can derive tape₁.nth i = tape₂.nth i
+    
+    -- h_nth gives us equality for LeftwardTape.nth
+    -- We need to translate this to Tape.nth
+    have h_eq := h_nth i
+    
+    -- Unpack what nth means for LeftwardTape
+    simp only [nth] at h_eq
+    exact h_eq
   simp only [mk.injEq]
   exact ⟨this, h_pos⟩
 
