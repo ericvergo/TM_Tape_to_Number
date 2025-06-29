@@ -3,7 +3,8 @@
 **Date:** December 2024  
 **Status:** 🚀 **Phase 3 Advanced - Framework Complete, Proofs in Progress**  
 **Build Status:** ✅ All modules compile successfully  
-**Architecture:** ✅ **Binary step sequences framework fully operational**
+**Architecture:** ✅ **Binary step sequences framework fully operational**  
+**Blueprint:** 🌐 **Interactive dependency graph now available!**
 
 ---
 
@@ -26,6 +27,8 @@ This project formalizes the paper "Integer Sequences from Turing Machine Tapes" 
 - ✅ **Key proof completed**: `extract_k_value_pow` - correctly extracts k from ±2^k
 - ✅ **Proof structures established**: All proofs have detailed structures with strategic comments
 - ✅ **Build system stable**: Both Basic.lean and Theorems.lean compile successfully
+- 🆕 **Interactive blueprint created**: Dependency graph visualization with formalization progress tracking
+- 🆕 **Documentation generation**: Lean docs integrated with blueprint for seamless navigation
 
 #### **Module Structure**
 ```
@@ -47,6 +50,29 @@ TMTapeToNumber/
     ├── Basic.lean                  # Definitions (156 lines) ✅
     └── Theorems.lean               # Main theorems (207 lines) ✅
 ```
+
+## 🌐 **Interactive Blueprint**
+
+### **New Infrastructure**
+- **Dependency Graph**: Visual representation of theorem dependencies centered on `finite_binary_step_sequence_generable`
+- **Progress Tracking**: Color-coded nodes showing formalization status
+  - 🟢 Green: Fully formalized (definition + proof)
+  - 🟡 Orange: Statement formalized, proof incomplete
+- **Documentation Integration**: Click-through from theorems to Lean docs
+- **Automated Updates**: Scripts for rebuilding blueprint and docs
+
+### **Access Methods**
+1. **Local Development**: 
+   ```bash
+   ./update_blueprint.sh  # Builds project, updates blueprint, starts server
+   ```
+2. **GitHub Pages**: https://ericvergo.github.io/TM_Tape_to_Number (after deployment)
+
+### **Key Features**
+- Interactive dependency visualization using D3.js
+- LaTeX paper content linked to Lean declarations
+- Automatic status updates based on proof completion
+- Integrated with CI/CD for continuous deployment
 
 ## 📊 **Proof Status Summary**
 
@@ -74,6 +100,8 @@ All remaining proofs have detailed structures ready for completion:
 ```bash
 lake build TMTapeToNumber.BinaryStepSequences.Basic   # ✅ Builds successfully
 lake build TMTapeToNumber.BinaryStepSequences.Theorems # ✅ Builds successfully
+lake build TMTapeToNumber:docs                        # ✅ Documentation builds
+leanblueprint web                                     # ✅ Blueprint generates
 ```
 
 ## 🔮 **Next Steps**
@@ -104,6 +132,8 @@ lake build TMTapeToNumber.BinaryStepSequences.Theorems # ✅ Builds successfully
 - ✅ Main characterization theorem successfully proven
 - ✅ Key extraction function `extract_k_value_pow` fully working
 - ✅ Complete proof structures with detailed strategies
+- ✅ Interactive blueprint for progress visualization
+- ✅ Automated tooling for documentation and updates
 
 ### **Future Work** 🚀
 - Complete remaining proofs to achieve 100% formalization
@@ -111,6 +141,7 @@ lake build TMTapeToNumber.BinaryStepSequences.Theorems # ✅ Builds successfully
 - Optimize sequence computation for large time steps
 - Prepare formalization for publication
 - Consider mechanizing related results about TM sequences
+- Enhance blueprint with additional theorem descriptions
 
 ## 📊 **Impact**
 
@@ -119,3 +150,16 @@ This formalization:
 - **Establishes** a complete framework with working extraction functions
 - **Demonstrates** successful Lean 4 formalization of computational mathematics
 - **Provides** reusable infrastructure for future TM-related proofs
+- **Showcases** modern theorem proving with interactive visualization
+
+## 🛠️ **Development Tools**
+
+### **New Scripts Available**
+- `./update_blueprint.sh` - Build project, update blueprint, start server
+- `./generate_docs.sh` - Generate Lean documentation
+- `./serve_blueprint.sh` - Start local web server for blueprint
+- `.github/workflows/blueprint.yml` - CI/CD for automatic deployment
+
+### **VS Code Integration**
+- Tasks configured for quick blueprint updates (Cmd+Shift+B)
+- Double-click `UPDATE_BLUEPRINT.command` for one-click updates
