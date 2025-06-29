@@ -1,13 +1,15 @@
-⚠ [918/920] Replayed TMTapeToNumber.LeftwardSequences.Basic
-warning: TMTapeToNumber/LeftwardSequences/Basic.lean:157:8: declaration uses 'sorry'
-warning: TMTapeToNumber/LeftwardSequences/Basic.lean:170:8: declaration uses 'sorry'
-⚠ [920/920] Built TMTapeToNumber.LeftwardSequences.Theorems
-warning: TMTapeToNumber/LeftwardSequences/Theorems.lean:309:6: declaration uses 'sorry'
-warning: TMTapeToNumber/LeftwardSequences/Theorems.lean:317:6: declaration uses 'sorry'
-warning: TMTapeToNumber/LeftwardSequences/Theorems.lean:324:6: declaration uses 'sorry'
-warning: TMTapeToNumber/LeftwardSequences/Theorems.lean:332:6: declaration uses 'sorry'
-warning: TMTapeToNumber/LeftwardSequences/Theorems.lean:340:6: declaration uses 'sorry'
-warning: TMTapeToNumber/LeftwardSequences/Theorems.lean:399:8: declaration uses 'sorry'
-warning: TMTapeToNumber/LeftwardSequences/Theorems.lean:421:18: declaration uses 'sorry'
-warning: TMTapeToNumber/LeftwardSequences/Theorems.lean:426:8: declaration uses 'sorry'
+⚠ [921/926] Replayed TMTapeToNumber.BinaryStepSequences.Basic
+warning: TMTapeToNumber/BinaryStepSequences/Basic.lean:108:8: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Basic.lean:121:8: declaration uses 'sorry'
+⚠ [922/926] Replayed TMTapeToNumber.BinaryStepSequences.Theorems
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:14:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:22:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:29:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:37:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:45:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:104:8: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:126:18: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:131:8: declaration uses 'sorry'
+✔ [924/926] Built TMTapeToNumber.Basic
+✔ [925/926] Built TMTapeToNumber
 Build completed successfully.
