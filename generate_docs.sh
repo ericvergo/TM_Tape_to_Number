@@ -20,17 +20,26 @@ if [ -d ".lake/build/doc" ]; then
     echo "Copying to blueprint/web/docs for local viewing..."
     
     # Create docs directory in blueprint
+    rm -rf blueprint/web/docs
     mkdir -p blueprint/web/docs
     
-    # Copy the documentation
+    # Copy ALL the documentation (including find directory)
     cp -r .lake/build/doc/* blueprint/web/docs/
     
     echo ""
     echo "📂 Documentation available at:"
     echo "  - Local: blueprint/web/docs/index.html"
+    echo "  - Find interface: blueprint/web/docs/find/"
     echo "  - When served: http://localhost:8000/docs/"
     echo ""
     echo "The blueprint Lean links will now work when viewing locally!"
+    
+    # Test that the find directory exists
+    if [ -d "blueprint/web/docs/find" ]; then
+        echo "✅ Find interface copied successfully!"
+    else
+        echo "⚠️  Warning: Find interface not found"
+    fi
 else
     echo "❌ Documentation build failed or output not found"
     exit 1
