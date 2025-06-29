@@ -1,3 +1,12 @@
-⚠ [926/926] Built TMTapeToNumber.BinaryStepSequences.Basic
+⚠ [927/932] Replayed TMTapeToNumber.BinaryStepSequences.Basic
 warning: TMTapeToNumber/BinaryStepSequences/Basic.lean:114:6: declaration uses 'sorry'
+⚠ [928/932] Replayed TMTapeToNumber.BinaryStepSequences.Theorems
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:14:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:74:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:94:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:110:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:126:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:194:8: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:234:18: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:239:8: declaration uses 'sorry'
 Build completed successfully.

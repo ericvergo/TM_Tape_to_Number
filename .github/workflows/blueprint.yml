@@ -1,0 +1,77 @@
+name: Build and Deploy Blueprint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz libgraphviz-dev
+          pip install --upgrade pip
+          pip install leanblueprint
+          
+      - name: Install Lean
+        uses: leanprover/lean-action@v1
+        with:
+          lake-version: "nightly"
+
+      - name: Build Lean project
+        run: lake build
+        
+      - name: Build Lean documentation
+        run: |
+          lake update doc-gen4
+          lake build TMTapeToNumber:docs
+          
+      - name: Build blueprint
+        run: |
+          leanblueprint pdf
+          leanblueprint web
+          
+      - name: Check declarations
+        run: leanblueprint checkdecls
+        
+      - name: Prepare deployment
+        run: |
+          # Copy Lean docs to blueprint web directory
+          cp -r .lake/build/doc blueprint/web/docs
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'blueprint/web'
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+      
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

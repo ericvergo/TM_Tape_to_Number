@@ -129,6 +129,16 @@ The machine repeatedly:
 2. Moves one position left
 3. Writes `true`
 
+## 📊 Interactive Blueprint
+
+An interactive dependency graph visualization is available at: https://ericvergo.github.io/TM_Tape_to_Number
+
+The blueprint shows:
+- Dependency relationships between theorems and definitions
+- Formalization progress (green = formalized, orange = not ready)
+- Links to both LaTeX source and Lean documentation
+- Focus on the main theorem: `finite_binary_step_sequence_generable`
+
 ## 🛠 Building and Usage
 
 ### Prerequisites
@@ -140,6 +150,18 @@ The machine repeatedly:
 git clone https://github.com/ericvergo/TM_Tape_to_Number.git
 cd TM_Tape_to_Number
 lake build
+```
+
+### Building the Blueprint Locally
+```bash
+# Install dependencies
+pip install leanblueprint
+# On macOS: brew install graphviz
+# On Ubuntu: sudo apt-get install graphviz libgraphviz-dev
+
+# Build blueprint
+leanblueprint web
+leanblueprint serve  # View at http://localhost:8000
 ```
 
 ### Exploring the Code

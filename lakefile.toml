@@ -11,9 +11,19 @@ autoImplicit = false
 name = "mathlib"
 scope = "leanprover-community"
 
+[[require]]
+name = "doc-gen4"
+scope = "leanprover"
+rev = "main"
+
 [[lean_lib]]
 name = "TMTapeToNumber"
 
 [[lean_exe]]
 name = "tm_tape_to_number"
 root = "Main"
+
+[[lean_exe]]
+name = "checkdecls"
+srcDir = "blueprint"
+root = "CheckDecls"

@@ -1,1 +1,5 @@
 /.lake
+/blueprint/web
+/blueprint/web/docs
+/build_output.txt
+/blueprint_build.txt
