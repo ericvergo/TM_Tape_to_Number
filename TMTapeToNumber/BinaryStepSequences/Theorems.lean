@@ -79,11 +79,127 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       have h_a_false : a = false := by
         cases a with
         | false => rfl
-        | true => contradiction
+        | true => 
+          -- If a = true, then h_new says ¬a = true, i.e., ¬true = true
+          -- This is False
+          exfalso
+          exact h_new rfl
       
       -- The key insight: encoding sums 2^|pos| for all positions ≤ 0 with true
       -- Writing false at head position removes that contribution
-      sorry
+      
+      -- Unfold the encoding definitions
+      simp only [encode_config, LeftwardTape.encode, LeftwardTape.write]
+      
+      -- The encoding changes by removing the contribution from the head position
+      -- First, let's establish that the head is at absolute position cfg.tape.head_pos
+      -- and since head_pos ≤ 0, we have |head_pos| = -head_pos
+      
+      -- The new tape has false at head position, old tape has true
+      -- So true_positions_absolute of new tape = old tape's true_positions \ {cfg.tape.head_pos}
+      
+      -- Need to show the difference is -2^(-cfg.tape.head_pos)
+      have h_head_pos_nonpos : cfg.tape.head_pos ≤ 0 := cfg.tape.head_nonpos
+      
+      -- The key insight: writing false at position 0 (relative) removes cfg.tape.head_pos from true_positions
+      -- because nth_absolute cfg.tape.head_pos = nth 0 = current_val = true (old)
+      -- and after writing false, nth_absolute cfg.tape.head_pos = false (new)
+      
+      -- Step 1: The old tape has true at absolute position cfg.tape.head_pos
+      have h_old_true : cfg.tape.nth_absolute cfg.tape.head_pos = true := by
+        simp only [nth_absolute, sub_self]
+        -- nth_absolute head_pos = nth (head_pos - head_pos) = nth 0
+        -- and current_val = cfg.tape.nth 0 = true
+        exact h_current
+      
+      -- Step 2: The new tape has false at absolute position cfg.tape.head_pos
+      have h_new_false : (cfg.tape.write a).nth_absolute cfg.tape.head_pos = false := by
+        simp only [nth_absolute, write, sub_self]
+        rw [Turing.Tape.write_nth]
+        simp only [if_pos rfl]
+        exact h_a_false
+      
+      -- Step 3: Other positions are unchanged by write
+      have h_unchanged : ∀ i ≠ cfg.tape.head_pos, 
+        (cfg.tape.write a).nth_absolute i = cfg.tape.nth_absolute i := by
+        intro i hi
+        simp only [nth_absolute, write]
+        rw [Turing.Tape.write_nth]
+        split_ifs with h
+        · -- If i - head_pos = 0, then i = head_pos, contradiction
+          have : i = cfg.tape.head_pos := by linarith
+          contradiction
+        · rfl
+      
+      -- Step 4: Show that true_positions differ only at cfg.tape.head_pos
+      have h_diff : (cfg.tape.write a).true_positions_absolute = 
+                    cfg.tape.true_positions_absolute \ {cfg.tape.head_pos} := by
+        ext i
+        simp only [true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset, 
+                   Finset.mem_sdiff, Finset.mem_singleton]
+        constructor
+        · intro ⟨hi_mem, hi_le, hi_true⟩
+          constructor
+          · -- Show i ∈ cfg.tape.true_positions_absolute
+            refine ⟨?_, hi_le, ?_⟩
+            · simp only [Set.mem_setOf, has_content_at_absolute]
+              by_cases h : i = cfg.tape.head_pos
+              · rw [h, h_old_true]
+                trivial
+              · rw [← h_unchanged i h]
+                simp only [has_content_at_absolute] at hi_mem
+                exact hi_mem
+            · by_cases h : i = cfg.tape.head_pos
+              · rw [h] at hi_true
+                rw [h_new_false] at hi_true
+                simp at hi_true
+              · rw [← h_unchanged i h]
+                exact hi_true
+          · -- Show i ≠ cfg.tape.head_pos
+            intro h
+            rw [h] at hi_true
+            rw [h_new_false] at hi_true
+            simp at hi_true
+        · intro ⟨⟨hi_mem, hi_le, hi_true⟩, hi_neq⟩
+          refine ⟨?_, hi_le, ?_⟩
+          · simp only [Set.mem_setOf, has_content_at_absolute]
+            rw [h_unchanged i hi_neq]
+            simp only [has_content_at_absolute] at hi_mem
+            exact hi_mem
+          · rw [h_unchanged i hi_neq]
+            exact hi_true
+      
+      -- Step 5: Calculate the encoding difference
+      -- The encoding of the new tape structure
+      have h_new_encode : (⟨Turing.Tape.write a cfg.tape.tape, 
+                           cfg.tape.head_pos,
+                           cfg.tape.head_nonpos⟩ : LeftwardTape Bool).true_positions_absolute = 
+                          (cfg.tape.write a).true_positions_absolute := by
+        -- Both are the same tape structure
+        rfl
+      
+      -- Rewrite the goal using this equality
+      rw [h_new_encode, h_diff]
+      
+      -- The sum over A \ {x} = sum over A - (if x ∈ A then 2^f(x) else 0)
+      have h_in : cfg.tape.head_pos ∈ cfg.tape.true_positions_absolute := by
+        simp only [true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset]
+        refine ⟨?_, h_head_pos_nonpos, h_old_true⟩
+        simp only [Set.mem_setOf, has_content_at_absolute, h_old_true]
+        trivial
+      
+      -- Use the formula: sum(A) = sum(A\{x}) + sum({x}) when x ∈ A
+      have h_sum_eq : (∑ i ∈ cfg.tape.true_positions_absolute, 2 ^ (-i).natAbs) =
+                      (∑ i ∈ cfg.tape.true_positions_absolute \ {cfg.tape.head_pos}, 2 ^ (-i).natAbs) +
+                      (∑ i ∈ ({cfg.tape.head_pos} : Finset ℤ), 2 ^ (-i).natAbs) := by
+        rw [← Finset.sum_sdiff (Finset.singleton_subset_iff.mpr h_in)]
+      
+      rw [h_sum_eq]
+      simp only [Finset.sum_singleton]
+      -- Now we have: sum(A\{x}) - (sum(A\{x}) + 2^|x|) = -2^|x|
+      -- Cast to integers for the arithmetic
+      push_cast
+      ring
   · -- Current value is false
     by_cases h_new : a = true
     · -- Writing true over false: adds 2^k
@@ -93,6 +209,133 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       -- The encoding increases by 2^|head_pos|
       -- The key insight: encoding sums 2^|pos| for all positions ≤ 0 with true
       -- Writing true at head position adds that contribution
+      
+      -- Similar to the previous case, but now we're adding instead of removing
+      have h_current_false : current_val = false := by
+        cases h_current_eq : current_val with
+        | false => rfl
+        | true => 
+          -- In this case branch, current_val = true (from h_current_eq)
+          -- But h_current says ¬current_val = true, i.e., ¬true = true
+          -- This is a contradiction
+          exfalso
+          rw [h_current_eq] at h_current
+          exact h_current rfl
+      
+      have h_a_true : a = true := by
+        cases a with
+        | false => 
+          -- If a = false, then h_new : a = true says false = true
+          -- This is impossible
+          exact absurd h_new (Bool.false_ne_true)
+        | true => rfl
+      
+      -- The old tape has false at head position, new tape has true
+      have h_old_false : cfg.tape.nth_absolute cfg.tape.head_pos = false := by
+        simp only [nth_absolute, sub_self]
+        exact h_current_false
+      
+      have h_new_true : (cfg.tape.write a).nth_absolute cfg.tape.head_pos = true := by
+        simp only [nth_absolute, write, sub_self]
+        rw [Turing.Tape.write_nth]
+        simp only [if_pos rfl]
+        exact h_a_true
+      
+      -- Other positions unchanged (same as before)
+      have h_unchanged : ∀ i ≠ cfg.tape.head_pos, 
+        (cfg.tape.write a).nth_absolute i = cfg.tape.nth_absolute i := by
+        intro i hi
+        simp only [nth_absolute, write]
+        rw [Turing.Tape.write_nth]
+        split_ifs with h
+        · have : i = cfg.tape.head_pos := by linarith
+          contradiction
+        · rfl
+      
+      -- Show that true_positions differ only by adding cfg.tape.head_pos
+      have h_diff : (cfg.tape.write a).true_positions_absolute = 
+                    cfg.tape.true_positions_absolute ∪ {cfg.tape.head_pos} := by
+        ext i
+        simp only [true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset, 
+                   Finset.mem_union, Finset.mem_singleton]
+        constructor
+        · intro ⟨hi_mem, hi_le, hi_true⟩
+          by_cases h : i = cfg.tape.head_pos
+          · right
+            exact h
+          · left
+            refine ⟨?_, hi_le, ?_⟩
+            · simp only [Set.mem_setOf, has_content_at_absolute]
+              rw [← h_unchanged i h]
+              simp only [has_content_at_absolute] at hi_mem
+              exact hi_mem
+            · -- We need to show cfg.tape.nth_absolute i = true
+              -- We know (cfg.tape.write a).nth_absolute i = true
+              -- and i ≠ cfg.tape.head_pos, so h_unchanged applies
+              have : cfg.tape.nth_absolute i = (cfg.tape.write a).nth_absolute i := by
+                rw [h_unchanged i h]
+              rw [this]
+              exact hi_true
+        · intro hi
+          cases hi with
+          | inl hi_in =>
+            obtain ⟨hi_mem, hi_le, hi_true⟩ := hi_in
+            refine ⟨?_, hi_le, ?_⟩
+            · simp only [Set.mem_setOf, has_content_at_absolute]
+              rw [h_unchanged i ?_]
+              · simp only [has_content_at_absolute] at hi_mem
+                exact hi_mem
+              · -- Need to show i ≠ cfg.tape.head_pos
+                intro h_eq
+                rw [h_eq] at hi_true
+                rw [h_old_false] at hi_true
+                simp at hi_true
+            · rw [h_unchanged i ?_]
+              · exact hi_true
+              · intro h_eq
+                rw [h_eq] at hi_true
+                rw [h_old_false] at hi_true
+                simp at hi_true
+          | inr hi_eq =>
+            rw [hi_eq]
+            refine ⟨?_, cfg.tape.head_nonpos, h_new_true⟩
+            simp only [Set.mem_setOf, has_content_at_absolute, h_new_true]
+            trivial
+      
+      -- Calculate the encoding difference
+      have h_new_encode : (⟨Turing.Tape.write a cfg.tape.tape, 
+                           cfg.tape.head_pos,
+                           cfg.tape.head_nonpos⟩ : LeftwardTape Bool).true_positions_absolute = 
+                          (cfg.tape.write a).true_positions_absolute := by
+        rfl
+      
+      -- First unfold the encoding
+      simp only [encode_config, LeftwardTape.encode]
+      -- Now we can use h_diff to rewrite the LHS
+      rw [h_diff]
+      
+      -- Show head_pos is not in the old true_positions (since it has false)
+      have h_not_in : cfg.tape.head_pos ∉ cfg.tape.true_positions_absolute := by
+        simp only [true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset]
+        push_neg
+        intro _ _
+        -- We need to show cfg.tape.nth_absolute cfg.tape.head_pos ≠ true
+        -- We have h_old_false : cfg.tape.nth_absolute cfg.tape.head_pos = false
+        rw [h_old_false]
+        simp
+      
+      -- Use the formula: sum(A ∪ {x}) = sum(A) + sum({x}) when x ∉ A
+      have h_sum_eq : (∑ i ∈ cfg.tape.true_positions_absolute ∪ {cfg.tape.head_pos}, 2 ^ (-i).natAbs) =
+                      (∑ i ∈ cfg.tape.true_positions_absolute, 2 ^ (-i).natAbs) +
+                      (∑ i ∈ ({cfg.tape.head_pos} : Finset ℤ), 2 ^ (-i).natAbs) := by
+        rw [Finset.sum_union]
+        exact Finset.disjoint_singleton_right.mpr h_not_in
+      
+      rw [h_sum_eq]
+      simp only [Finset.sum_singleton]
+      -- Now we have: (sum(A) + 2^|x|) - sum(A) = 2^|x|
+      -- This is basic arithmetic: (a + b) - a = b
+      -- TODO: Fix this arithmetic
       sorry
     · -- Writing false over false: no change
       left
@@ -103,13 +346,23 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       -- h_current says current_val ≠ true, so current_val = false (for Bool)
       -- h_new says a ≠ true, so a = false
       have h_current_false : current_val = false := by
-        cases current_val with
+        cases h_current_eq : current_val with
         | false => rfl
-        | true => sorry
+        | true => 
+          -- In this case branch, current_val = true (from h_current_eq)
+          -- But h_current says ¬current_val = true, i.e., ¬true = true
+          -- This is a contradiction
+          exfalso
+          rw [h_current_eq] at h_current
+          exact h_current rfl
       have h_a_false : a = false := by
         cases a with
         | false => rfl
-        | true => contradiction
+        | true => 
+          -- If a = true, then h_new says ¬a = true, i.e., ¬true = true
+          -- This is False
+          exfalso
+          exact h_new rfl
       rw [h_current_false] at h_read
       -- h_read : cfg.tape.tape.nth 0 = false
       -- We're writing a = false (from h_a_false)
