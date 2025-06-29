@@ -1,14 +1,11 @@
-⚠ [861/928] Replayed TMTapeToNumber.LeftTM0.LeftwardTape
+⚠ [857/932] Replayed TMTapeToNumber.LeftTM0.LeftwardTape
 warning: TMTapeToNumber/LeftTM0/LeftwardTape.lean:74:8: declaration uses 'sorry'
-⚠ [926/928] Replayed TMTapeToNumber.BinaryStepSequences.Basic
+⚠ [927/932] Replayed TMTapeToNumber.BinaryStepSequences.Basic
 warning: TMTapeToNumber/BinaryStepSequences/Basic.lean:114:6: declaration uses 'sorry'
-✖ [928/928] Building TMTapeToNumber.BinaryStepSequences.Theorems
+✖ [929/932] Building TMTapeToNumber.BinaryStepSequences.Theorems
 trace: .> LEAN_PATH=/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/batteries/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Qq/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/aesop/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/importGraph/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/plausible/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/MD4Lean/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/BibtexQuery/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/UnicodeBasic/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Cli/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/mathlib/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/doc-gen4/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean /Users/eric/.elan/toolchains/leanprover--lean4---v4.21.0-rc3/bin/lean -Dpp.unicode.fun=true -DautoImplicit=false /Users/eric/Documents/GitHub/TM_Tape_to_Number/TMTapeToNumber/BinaryStepSequences/Theorems.lean -R /Users/eric/Documents/GitHub/TM_Tape_to_Number -o /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/BinaryStepSequences/Theorems.olean -i /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/BinaryStepSequences/Theorems.ilean -c /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/ir/TMTapeToNumber/BinaryStepSequences/Theorems.c --json
-error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:12:51: unknown identifier 'Tape'
-error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:12:51: unknown identifier 'Tape'
-error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:81:14: unknown identifier 'Tape.ext''
-error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:82:8: no goals to be solved
-error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:114:52: unsolved goals
+error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:30:4: no goals to be solved
+error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:122:18: tactic 'contradiction' failed
 case true
 Λ : Type u_1
 inst✝ : Inhabited Λ
@@ -16,19 +13,17 @@ cfg cfg' : Cfg Bool Λ
 a : Bool
 h_cfg' : cfg' = { q := cfg.q, tape := cfg.tape.write a }
 current_val : Bool := cfg.tape.nth 0
+h_current : ¬current_val = true
 h_new : ¬a = true
 h_read : cfg.tape.tape.nth 0 = current_val
-h_current : current_val = false
-⊢ False
-error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:124:14: unknown identifier 'Tape.ext''
-error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:125:8: no goals to be solved
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:137:6: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:157:6: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:173:6: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:189:6: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:257:8: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:297:18: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:302:8: declaration uses 'sorry'
+⊢ true = false
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:148:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:168:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:184:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:200:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:268:8: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:308:18: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:313:8: declaration uses 'sorry'
 error: Lean exited with code 1
 Some required builds logged failures:
 - TMTapeToNumber.BinaryStepSequences.Theorems
