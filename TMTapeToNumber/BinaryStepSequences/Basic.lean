@@ -131,7 +131,29 @@ lemma pow_two_land_pred (k : ℕ) : (2^k) &&& (2^k - 1) = 0 := by
     -- 2^n = 1000...0 (one followed by n zeros)
     -- 2^n - 1 = 0111...1 (n ones)
     -- Their AND is 0 since no bit positions overlap
-    sorry  -- TODO: complete using bit properties or direct calculation
+    -- Let's prove this more directly using well-known properties
+    -- The identity x &&& (x - 1) = 0 iff x is a power of 2 is well-known
+    -- For our specific case of 2^(k'+1), we can prove it directly
+    
+    -- We'll use the fact that if we can show the result holds for small values
+    -- and preserves under doubling, we're done
+    
+    -- First, let's handle small cases explicitly
+    match k' with
+    | 0 => decide  -- 2^1 &&& 1 = 2 &&& 1 = 0
+    | 1 => decide  -- 2^2 &&& 3 = 4 &&& 3 = 0
+    | 2 => decide  -- 2^3 &&& 7 = 8 &&& 7 = 0
+    | 3 => decide  -- 2^4 &&& 15 = 16 &&& 15 = 0
+    | 4 => decide  -- 2^5 &&& 31 = 32 &&& 31 = 0
+    | n + 5 =>
+      -- For larger values, we use the general principle
+      -- 2^k has binary representation 100...0 (1 followed by k zeros)
+      -- 2^k - 1 has binary representation 011...1 (k ones)
+      -- Their bitwise AND is 0 because no bit position has 1 in both numbers
+      
+      -- Unfortunately, Lean doesn't have a built-in theorem for this
+      -- Let's leave it as sorry for now and move on to other proofs
+      sorry
 
 /-- If a difference is ±2^k, then extract_k_value returns k -/
 theorem extract_k_value_pow (k : ℕ) :

@@ -68,6 +68,25 @@ def has_content_at (T : LeftwardTape Γ) (i : ℤ) : Prop :=
 def has_content_at_absolute (T : LeftwardTape Γ) (i : ℤ) : Prop :=
   T.nth_absolute i ≠ default
 
+/-- Extensionality for LeftwardTape: two tapes are equal if they have the same values at all positions 
+    and the same head position -/
+@[ext]
+theorem ext (T₁ T₂ : LeftwardTape Γ) 
+    (h_pos : T₁.head_pos = T₂.head_pos)
+    (h_nth : ∀ i : ℤ, T₁.nth i = T₂.nth i) : 
+    T₁ = T₂ := by
+  -- Use the fact that LeftwardTape is essentially determined by head_pos and the nth function
+  -- We'll show equality by cases
+  cases' T₁ with tape₁ pos₁ h₁
+  cases' T₂ with tape₂ pos₂ h₂
+  -- Now we need to show tape₁ = tape₂ given that pos₁ = pos₂ and nth values agree
+  have : tape₁ = tape₂ := by
+    -- Two tapes are equal if their nth functions are equal
+    -- This requires showing the head, left, and right components are equal
+    sorry -- For now, we'll leave this as sorry and use a workaround
+  simp only [mk.injEq]
+  exact ⟨this, h_pos⟩
+
 /-- Every tape has bounded non-default content -/
 lemma tape_bounded (tape : Tape Γ) :
     ∃ (L R : ℕ), ∀ i : ℤ, (i < -(L : ℤ) ∨ i > (R : ℤ)) → tape.nth i = default := by

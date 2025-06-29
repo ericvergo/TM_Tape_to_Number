@@ -1,11 +1,27 @@
+MCP TOOLS AVAILABLE
+The lean-lsp MCP server provides powerful tools for real-time Lean development:
+- `lean_goal` - See proof goals at any position (essential for understanding what to prove)
+- `lean_diagnostic_messages` - Get errors without building
+- `lean_hover_info` - Instant type information and documentation
+- `lean_state_search` - Find theorems applicable to current goal (3req/30s limit)
+- `lean_leansearch` - Natural language theorem search (3req/30s limit)
+- `lean_loogle` - Pattern-based theorem search (3req/30s limit)
+- `lean_multi_attempt` - Test multiple tactics quickly
+- `lean_completions` - Explore available tactics and lemmas
+- `lean_term_goal` - Understand expected types
+- `lean_run_code` - Test proof snippets without file modification
+- `lean_declaration_file` - Find where symbols are defined
+- `lean_build` - Build project when needed
+
 BEHAVIORS TO EMBODY
-- Build Lean files immediately after editing them to check for errors. NEVER truncate error messages - it is critical to read the full output.
-- **ALWAYS** save build output to a text file using `| tee build_output.txt` for complete error analysis
+- Use MCP tools to check proof states and errors in real-time without building
+- When editing proofs, use `lean_goal` to understand the current proof state
+- Use `lean_diagnostic_messages` to get immediate feedback on errors
 - Break up proofs into smaller lemmas to help chunk out work
 - Keep notes in comments about proof attempts that didn't work
-- Always read the ENTIRE build output - every error, warning, and goal state
-- Address errors systematically, one at a time
+- Address errors systematically, one at a time using MCP diagnostics
 - Use `have` statements liberally to break down complex goals
+- Only run full builds (`lake build`) when finalizing changes or if MCP tools are insufficient
 
 BEHAVIORS TO AVOID
 - Don't replace a sorry with another sorry and consider it making progress
@@ -13,43 +29,42 @@ BEHAVIORS TO AVOID
 - Truncating or skipping parts of error messages
 - Making assumptions about what an error means without reading it fully
 - Trying to fix multiple errors at once without understanding each one
-- **NEVER** run build commands without saving output to build_output.txt
+- Overusing rate-limited search tools - respect the 3 requests per 30 seconds limit
+- Running full builds when MCP tools can provide immediate feedback
 
-ITERATIVE PROOF WORKFLOW
+MCP-POWERED PROOF WORKFLOW
 When proving theorems with sorries:
-1. First pass: Read the file completely to understand all theorems that need proving
+1. First pass: Use `lean_file_contents` to read and understand all theorems
 2. For each theorem with sorry:
-   a. Replace the sorry with a proof attempt
-   b. **MANDATORY**: Build the file with: `lake build <module> 2>&1 | tee build_output.txt`
-   c. **MANDATORY**: Read build_output.txt completely - EVERY line of errors/warnings
-   d. Copy the COMPLETE error message including:
-      - The goal state
-      - All hypotheses
-      - The exact error description
-      - Any suggestions from Lean
-   e. Address the specific error in context
-   f. Rebuild and repeat until clean
-3. Only move to the next theorem after the current one builds cleanly
-4. If stuck, consider:
-   - Breaking the proof into helper lemmas
-   - Looking for similar proofs in the codebase
-   - Checking mathlib for relevant theorems
+   a. Use `lean_goal` at the sorry location to see the exact proof state
+   b. Use `lean_state_search` to find applicable theorems from the current state
+   c. Use `lean_multi_attempt` to test multiple proof strategies quickly
+   d. Once you have a promising approach, replace the sorry with the proof
+   e. Use `lean_diagnostic_messages` to check for errors immediately
+   f. If errors occur:
+      - Use `lean_hover_info` to understand type mismatches
+      - Use `lean_completions` to explore available tactics/lemmas
+      - Use `lean_term_goal` to understand expected types
+   g. Iterate until `lean_diagnostic_messages` shows no errors
+3. Only run `lake build` for final verification or when MCP tools are insufficient
+4. If stuck, use in order:
+   - `lean_state_search` - Find theorems applicable to current goal
+   - `lean_leansearch` - Natural language search for relevant concepts
+   - `lean_loogle` - Pattern-based search for specific theorem shapes
 
-**MANDATORY BUILD COMMAND FORMAT:**
+Example MCP workflow:
 ```
-lake build <module_name> 2>&1 | tee build_output.txt
-```
-
-Example workflow:
-```
-1. Edit file, attempt proof
-2. **ALWAYS RUN**: lake build TMTapeToNumber.LeftTM0.LeftwardSequences 2>&1 | tee build_output.txt
-3. **ALWAYS READ**: build_output.txt completely - never skip this step
-4. Address each error based on the full context
-5. Repeat until no errors remain
+1. Check goal: lean_goal(file_path, line, column)
+2. Search applicable theorems: lean_state_search(file_path, line, column)
+3. Test approaches: lean_multi_attempt(file_path, line, ["simp", "omega", "linarith"])
+4. Edit file with working proof
+5. Verify: lean_diagnostic_messages(file_path)
 ```
 
-**CRITICAL**: Every single build command MUST include `2>&1 | tee build_output.txt` to capture the complete output for analysis. This is non-negotiable for effective debugging.
+FALLBACK BUILD COMMAND (only when needed):
+```
+lake build <module_name>
+```
 
 PROOF STRATEGIES
 - For equality proofs: Consider `rfl`, `simp`, `rw`, or `congr`
@@ -59,28 +74,62 @@ PROOF STRATEGIES
 - For case analysis: Use `cases` or `match` with exhaustive patterns
 - When goals get complex: Extract sub-goals with `have` statements
 
-ERROR HANDLING
-Common Lean errors and solutions:
-- "failed to synthesize instance": You're missing a typeclass instance
-- "type mismatch": Check exact types with `#check`, use `show` to clarify
-- "tactic failed": The tactic doesn't apply - read why from the goal state
-- "declaration uses sorry": You still have incomplete proofs
-- Goal state shows `⊢ False`: You've reached a contradiction - check your assumptions
+MCP-POWERED ERROR HANDLING
+Real-time error diagnosis without building:
+1. **Check errors immediately**: `lean_diagnostic_messages(file_path)`
+2. **Understand type mismatches**: 
+   - `lean_hover_info(file_path, line, column)` on the problematic term
+   - `lean_term_goal(file_path, line, column)` to see expected type
+3. **Debug tactic failures**:
+   - `lean_goal(file_path, line, column)` to see the actual goal
+   - `lean_multi_attempt` to test alternative tactics
+4. **Explore available options**: `lean_completions(file_path, line, column)`
+
+Common Lean errors and MCP solutions:
+- "failed to synthesize instance": 
+  - Use `lean_hover_info` to check required instances
+  - Use `lean_completions` to find available instances
+- "type mismatch": 
+  - Use `lean_hover_info` on both sides of the mismatch
+  - Use `lean_term_goal` to see what type is expected
+- "tactic failed": 
+  - Use `lean_goal` to see the exact goal state
+  - Use `lean_state_search` to find applicable theorems
+- "declaration uses sorry": 
+  - Use `lean_diagnostic_messages` to find all sorries
+  - Use workflow above to complete each one
+- Goal state shows `⊢ False`: 
+  - You've reached a contradiction
+  - Use `lean_goal` with column positions before the contradiction to trace assumptions
 
 When to split into lemmas:
 - When you prove something that could be reused
 - When the goal has multiple independent parts
 - When you need to prove a property by induction separately
 
-SEARCH TIPS
-- When making mathlib inquiries, use a local grep search constrained to /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/mathlib/Mathlib. This is a local, complete mathlib build
-- When trying to find import statements, look in /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/mathlib/Mathlib.lean. This file contains every possible mathlib import statement, one per line
-- Search patterns for mathlib:
-  - For theorems about specific functions: `grep -r "theorem.*function_name" .lake/packages/mathlib/Mathlib`
-  - For instances: `grep -r "instance.*TypeClass" .lake/packages/mathlib/Mathlib`
-  - For definitions: `grep -r "^def.*keyword" .lake/packages/mathlib/Mathlib`
-- Use `#check` in Lean files to explore theorem signatures
-- Use `by exact?` to search for applicable theorems
+MCP SEARCH TOOLS (PRIMARY - USE THESE FIRST)
+- **lean_state_search** (limit: 3req/30s): Finds theorems applicable to current proof state
+  - Most powerful for finding relevant lemmas when you have a specific goal
+  - Automatically uses the first goal if multiple exist
+- **lean_leansearch** (limit: 3req/30s): Natural language theorem search
+  - Query patterns: "Cauchy Schwarz", "n < m implies n + 1 < m + 1"
+  - Mixed queries: "natural numbers. from: n < m, to: n + 1 < m + 1"
+  - Can search by concept names or Lean terms
+- **lean_loogle** (limit: 3req/30s): Pattern-based theorem search
+  - By constant: `Real.sin`
+  - By subexpression: `_ * (_ ^ _)`
+  - By type shape: `(?a -> ?b) -> List ?a -> List ?b`
+  - By conclusion: `|- tsum _ = _ * tsum _`
+- **lean_hover_info**: Get instant documentation and type info
+- **lean_completions**: Explore available tactics, lemmas, and identifiers
+
+FALLBACK SEARCH METHODS (when MCP tools are rate-limited or insufficient)
+- Local mathlib grep: `/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/mathlib/Mathlib`
+- Import lookup: `/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/mathlib/Mathlib.lean`
+- Search patterns:
+  - Theorems: `grep -r "theorem.*function_name" .lake/packages/mathlib/Mathlib`
+  - Instances: `grep -r "instance.*TypeClass" .lake/packages/mathlib/Mathlib`
+  - Definitions: `grep -r "^def.*keyword" .lake/packages/mathlib/Mathlib`
 
 TYPE CONVERSION AND CASTING
 - When working with Int.natAbs, remember it returns a Nat, not an Int
@@ -115,9 +164,10 @@ INEQUALITY PROOFS
 - For power inequalities, Nat.pow_pos and Nat.one_le_two_pow are useful
 - Build inequality chains with `calc` or transitive lemmas
 
-DEBUGGING BUILD ERRORS
+DEBUGGING ERRORS WITH MCP
+- Use `lean_diagnostic_messages` to get real-time error information
 - "no goals to be solved" often means a branch of a proof is already complete
-- When seeing "unsolved goals", check all branches of case splits and inductions
+- When seeing "unsolved goals", use `lean_goal` to check all branches
 - Pay attention to whether you're inside a tactic block or term mode
 - Use `by exact` instead of just providing a term when Lean expects a tactic
 
@@ -164,3 +214,87 @@ induction n with
   rw [sum_range_succ, ih]
   -- Algebraic manipulation
 ```
+
+MCP TOOL USAGE PATTERNS
+
+Exploring a sorry:
+```lean
+-- 1. Get the proof state
+lean_goal(file_path, line_of_sorry, column)
+
+-- 2. Search for applicable theorems
+lean_state_search(file_path, line_of_sorry, column, num_results=10)
+
+-- 3. Test multiple approaches quickly
+lean_multi_attempt(file_path, line_of_sorry, 
+  ["simp", "omega", "linarith", "ring", "field_simp", "norm_num"])
+```
+
+Understanding type errors:
+```lean
+-- 1. Hover over the problematic term
+lean_hover_info(file_path, line, column_at_start_of_term)
+
+-- 2. Check expected type at position
+lean_term_goal(file_path, line, column)
+
+-- 3. Get completions to see valid options
+lean_completions(file_path, line, column)
+```
+
+Finding the right lemma:
+```lean
+-- 1. Natural language search
+lean_leansearch("if a divides b and b divides c then a divides c", num_results=5)
+
+-- 2. Pattern search for specific shape
+lean_loogle("_ ∣ _ → _ ∣ _ → _ ∣ _", num_results=8)
+
+-- 3. Search by current goal state
+lean_state_search(file_path, line, column)
+```
+
+Testing proof ideas without editing:
+```lean
+-- Test if a theorem applies
+lean_run_code("""
+import Mathlib.Data.Nat.Basic
+example (n : ℕ) : n + 0 = n := by
+  rw [Nat.add_zero]
+""")
+
+-- Try multiple tactics at once
+lean_multi_attempt(file_path, line, 
+  ["exact Nat.add_comm", "rw [Nat.add_comm]", "simp [Nat.add_comm]"])
+```
+
+Finding declarations:
+```lean
+-- 1. First check if symbol is available
+lean_hover_info(file_path, line, column_of_symbol)
+
+-- 2. If found, get its definition file
+lean_declaration_file(file_path, "Nat.add_comm")
+
+-- 3. Read the declaration's implementation
+lean_file_contents(declaration_file_path)
+```
+
+WHEN TO USE MCP TOOLS VS FULL BUILDS
+
+Use MCP tools for:
+- Understanding proof goals and states (`lean_goal`)
+- Finding applicable theorems (`lean_state_search`, `lean_leansearch`)
+- Testing proof strategies (`lean_multi_attempt`)
+- Getting immediate error feedback (`lean_diagnostic_messages`)
+- Exploring type information (`lean_hover_info`, `lean_term_goal`)
+- Quick proof experiments (`lean_run_code`)
+
+Use `lake build` for:
+- Final verification before committing
+- When MCP tools report connection issues
+- Building the entire project after major changes
+- Generating documentation
+- When explicitly requested by the user
+
+Remember: MCP tools give instant feedback without the overhead of full compilation, making the proof development cycle much faster!

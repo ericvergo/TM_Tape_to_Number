@@ -1,0 +1,69 @@
+✖ [857/857] Building TMTapeToNumber.LeftTM0.LeftwardTape
+trace: .> LEAN_PATH=/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/batteries/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Qq/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/aesop/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/importGraph/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/plausible/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/MD4Lean/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/BibtexQuery/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/UnicodeBasic/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Cli/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/mathlib/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/doc-gen4/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean /Users/eric/.elan/toolchains/leanprover--lean4---v4.21.0-rc3/bin/lean -Dpp.unicode.fun=true -DautoImplicit=false /Users/eric/Documents/GitHub/TM_Tape_to_Number/TMTapeToNumber/LeftTM0/LeftwardTape.lean -R /Users/eric/Documents/GitHub/TM_Tape_to_Number -o /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/LeftTM0/LeftwardTape.olean -i /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/LeftTM0/LeftwardTape.ilean -c /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/ir/TMTapeToNumber/LeftTM0/LeftwardTape.c --json
+error: TMTapeToNumber/LeftTM0/LeftwardTape.lean:88:49: unsolved goals
+case h.e'_2
+Γ : Type u_1
+inst✝ : Inhabited Γ
+T₁ T₂ : LeftwardTape Γ
+h_pos : T₁.head_pos = T₂.head_pos
+h_nth : ∀ (i : ℤ), T₁.nth i = T₂.nth i
+h_head : T₁.tape.head = T₂.tape.head
+i : ℕ
+this :
+  (match -1 + -↑i with
+    | 0 => T₁.tape.head
+    | Int.ofNat n.succ => T₁.tape.right.nth n
+    | Int.negSucc n => T₁.tape.left.nth n) =
+    match -1 + -↑i with
+    | 0 => T₂.tape.head
+    | Int.ofNat n.succ => T₂.tape.right.nth n
+    | Int.negSucc n => T₂.tape.left.nth n
+⊢ T₁.tape.left.liftOn (fun l ↦ l.getI i) ⋯ =
+    match -1 + -↑i with
+    | 0 => T₁.tape.head
+    | Int.ofNat n.succ => T₁.tape.right.liftOn (fun l ↦ l.getI n) ⋯
+    | Int.negSucc n => T₁.tape.left.liftOn (fun l ↦ l.getI n) ⋯
+
+case h.e'_3
+Γ : Type u_1
+inst✝ : Inhabited Γ
+T₁ T₂ : LeftwardTape Γ
+h_pos : T₁.head_pos = T₂.head_pos
+h_nth : ∀ (i : ℤ), T₁.nth i = T₂.nth i
+h_head : T₁.tape.head = T₂.tape.head
+i : ℕ
+this :
+  (match -1 + -↑i with
+    | 0 => T₁.tape.head
+    | Int.ofNat n.succ => T₁.tape.right.nth n
+    | Int.negSucc n => T₁.tape.left.nth n) =
+    match -1 + -↑i with
+    | 0 => T₂.tape.head
+    | Int.ofNat n.succ => T₂.tape.right.nth n
+    | Int.negSucc n => T₂.tape.left.nth n
+⊢ T₂.tape.left.nth i =
+    match -1 + -↑i with
+    | 0 => T₂.tape.head
+    | Int.ofNat n.succ => T₂.tape.right.nth n
+    | Int.negSucc n => T₂.tape.left.nth n
+error: TMTapeToNumber/LeftTM0/LeftwardTape.lean:101:6: no goals to be solved
+error: TMTapeToNumber/LeftTM0/LeftwardTape.lean:105:11: Application type mismatch: In the application
+  And.intro h_head
+the argument
+  h_head
+has type
+  T₁.tape.head = T₂.tape.head : Prop
+but is expected to have type
+  head✝¹ = head✝ : Prop
+error: TMTapeToNumber/LeftTM0/LeftwardTape.lean:105:19: Application type mismatch: In the application
+  And.intro h_left
+the argument
+  h_left
+has type
+  T₁.tape.left = T₂.tape.left : Prop
+but is expected to have type
+  left✝¹ = left✝ : Prop
+error: Lean exited with code 1
+Some required builds logged failures:
+- TMTapeToNumber.LeftTM0.LeftwardTape
+error: build failed

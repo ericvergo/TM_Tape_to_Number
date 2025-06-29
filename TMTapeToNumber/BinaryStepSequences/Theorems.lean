@@ -8,6 +8,34 @@ open LeftTM0.Theorems
 
 variable {Λ : Type*} [Inhabited Λ]
 
+-- Helper lemma for Tape extensionality
+lemma Turing.Tape.ext' {Γ : Type*} [Inhabited Γ] (T₁ T₂ : Turing.Tape Γ) 
+    (h : ∀ i, T₁.nth i = T₂.nth i) : T₁ = T₂ := by
+  cases' T₁ with head₁ left₁ right₁
+  cases' T₂ with head₂ left₂ right₂
+  simp at h ⊢
+  constructor
+  · -- heads are equal
+    have := h 0
+    simp [Turing.Tape.nth] at this
+    exact this
+  constructor  
+  · -- lefts are equal
+    apply Turing.ListBlank.ext
+    intro n
+    have := h (-(n + 1 : ℕ))
+    -- When i = -(n+1), T.nth i = T.left.nth n
+    -- So this gives us T₁.left.nth n = T₂.left.nth n
+    convert this
+    · simp [Turing.Tape.nth]
+    · simp [Turing.Tape.nth]
+  · -- rights are equal
+    apply Turing.ListBlank.ext
+    intro n
+    have := h (n + 1 : ℕ)
+    simp [Turing.Tape.nth] at this
+    exact this
+
 -- Forward Characterization: TM sequences are binary step sequences
 
 /-- The difference in encoding when writing at a position is ±2^k where k is the absolute position -/
@@ -44,10 +72,28 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
     · -- Writing true over true: no change
       left
       -- Show encoding doesn't change
-      have h_eq : cfg.tape.write a = cfg.tape := by
-        -- The tape doesn't change when writing the same value
-        sorry -- TODO: Need lemma about write being idempotent
-      simp [encode_config, h_eq]
+      -- Show the encoding difference is 0
+      simp only [h_cfg']
+      have h_read : cfg.tape.tape.nth 0 = current_val := rfl
+      rw [h_current] at h_read
+      -- h_read : cfg.tape.tape.nth 0 = true
+      -- We're writing a = true (from h_new)
+      -- So the tape doesn't change
+      have h_write_eq : cfg.tape.tape.write a = cfg.tape.tape := by
+        rw [h_new]  -- Now we need to show cfg.tape.tape.write true = cfg.tape.tape
+        apply Turing.Tape.ext'
+        intro i
+        by_cases h_pos : i = 0
+        · -- At position 0, we're writing true where there's already true
+          rw [h_pos, Turing.Tape.write_nth]
+          simp
+          exact h_read
+        · -- At other positions, write doesn't change the value
+          rw [Turing.Tape.write_nth]
+          simp [h_pos]
+      simp only [encode_config, LeftwardTape.write]
+      rw [h_write_eq]
+      simp
     · -- Writing false over true: removes 2^k
       right
       use Int.natAbs (-cfg.tape.head_pos)
@@ -65,10 +111,38 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
     · -- Writing false over false: no change
       left
       -- Show encoding doesn't change
-      have h_eq : cfg.tape.write a = cfg.tape := by
-        -- The tape doesn't change when writing the same value
-        sorry -- TODO: Need lemma about write being idempotent
-      simp [encode_config, h_eq]
+      -- Show the encoding difference is 0
+      simp only [h_cfg']
+      have h_read : cfg.tape.tape.nth 0 = current_val := rfl
+      -- h_current says current_val ≠ true, so current_val = false (for Bool)
+      -- h_new says a ≠ true, so a = false
+      have h_current_false : current_val = false := by
+        cases current_val with
+        | false => rfl
+        | true => contradiction
+      have h_a_false : a = false := by
+        cases a with
+        | false => rfl
+        | true => contradiction
+      rw [h_current_false] at h_read
+      -- h_read : cfg.tape.tape.nth 0 = false
+      -- We're writing a = false (from h_a_false)
+      -- So the tape doesn't change
+      have h_write_eq : cfg.tape.tape.write a = cfg.tape.tape := by
+        rw [h_a_false]  -- Now we need to show cfg.tape.tape.write false = cfg.tape.tape
+        apply Turing.Tape.ext'
+        intro i
+        by_cases h_pos : i = 0
+        · -- At position 0, we're writing false where there's already false
+          rw [h_pos, Turing.Tape.write_nth]
+          simp
+          exact h_read
+        · -- At other positions, write doesn't change the value
+          rw [Turing.Tape.write_nth]
+          simp [h_pos]
+      simp only [encode_config, LeftwardTape.write]
+      rw [h_write_eq]
+      simp
 
 /-- One step of a TM changes the encoding by 0 or ±2^k -/
 lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
