@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  MathJax = { 
+    tex: {
+		    inlineMath: [['$','$'], ['\\(','\\)']]
+	} }
+</script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+<meta name="generator" content="plasTeX" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Structural Properties</title>
+<link rel="next" href="sect0004.html" title="Supporting Lemmas" />
+<link rel="prev" href="sect0002.html" title="The Basic Construction" />
+<link rel="up" href="index.html" title="Integer Sequences from Turing Machine Tapes" />
+<link rel="stylesheet" href="styles/theme-white.css" />
+<link rel="stylesheet" href="styles/amsthm.css" />
+<link rel="stylesheet" href="styles/showmore.css" />
+<link rel="stylesheet" href="styles/blueprint.css" />
+<link rel="stylesheet" href="styles/extra_styles.css" />
+</head>
+
+<body>
+<header>
+<svg  id="toc-toggle" class="icon icon-list-numbered "><use xlink:href="symbol-defs.svg#icon-list-numbered"></use></svg>
+<h1 id="doc_title"><a href="index.html">Integer Sequences from Turing Machine Tapes</a></h1>
+</header>
+
+<div class="wrapper">
+<nav class="toc">
+<ul class="sub-toc-0">
+<li class="">
+  <a href="sect0001.html"><span class="toc_ref">1</span> <span class="toc_entry">Introduction</span></a>
+ </li>
+<li class="">
+  <a href="sect0002.html"><span class="toc_ref">2</span> <span class="toc_entry">The Basic Construction</span></a>
+ </li>
+<li class=" active current">
+  <a href="sect0003.html"><span class="toc_ref">3</span> <span class="toc_entry">Structural Properties</span></a>
+ </li>
+<li class="">
+  <a href="sect0004.html"><span class="toc_ref">4</span> <span class="toc_entry">Supporting Lemmas</span></a>
+ </li>
+<li class="">
+  <a href="sect0005.html"><span class="toc_ref">5</span> <span class="toc_entry">Universality Results</span></a>
+ </li>
+<li class="">
+  <a href="sect0006.html"><span class="toc_ref">6</span> <span class="toc_entry">Connections and Open Questions</span></a>
+  <span class="expand-toc">▶</span>
+  <ul class="sub-toc-1">
+     <li class="">
+  <a href="sect0006.html#a0000000009"><span class="toc_ref"></span> <span class="toc_entry">Alternative Encodings.</span></a>
+ </li>
+<li class="">
+  <a href="sect0006.html#a0000000010"><span class="toc_ref"></span> <span class="toc_entry">Complexity of Generation.</span></a>
+ </li>
+
+  </ul>
+ </li>
+<li class="">
+  <a href="sect0007.html"><span class="toc_ref">7</span> <span class="toc_entry">Conclusion</span></a>
+ </li>
+<li ><a href="dep_graph_document.html">Dependency graph</a></li>
+</ul>
+</nav>
+
+<div class="content">
+<div class="content-wrapper">
+
+
+<div class="main-text">
+<h1 id="a0000000004">3 Structural Properties</h1>
+<p>The sequences generated TMs are highly structured and defined by the physical movement of the TM head, which can only modify one bit each step, at one location each step, and move a single cell at each step. </p>
+<div class="definition_thmwrapper theorem-style-definition" id="def:binary_step_sequence">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">2</span>
+    <span class="definition_thmtitle">Binary Step Sequence</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#def:binary_step_sequence">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0002.html#def:encoding">Definition 1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.is_binary_step_sequence" class="lean_decl">LeftTM0.is_binary_step_sequence</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    A sequence \((s_t)_{t\geq 0}\) is a <em>binary step sequence</em> if it meets all of the following conditions: </p>
+<ol class="enumerate">
+  <li><p>\(s_0 = 0\). </p>
+</li>
+  <li><p>For each step \(t \geq 0\), the difference \(\delta _t = s_{t+1} - s_t\) is either \(0\) or has the form \(\pm 2^k\) for some non-negative integer \(k\). </p>
+</li>
+  <li><p>Let \(I = \{ t \geq 0 \mid \delta _t \neq 0\} \) be the set of indices where the sequence changes. For each \(t \in I\), define \(k_t = \log _2 |\delta _t|\). The following must hold: </p>
+<ol class="enumerate">
+  <li><p>For every \(t \in I\), we must have \(k_t \leq t\). This reflects that the head, starting at position 0, can reach at most position \(t\) after \(t\) steps. </p>
+</li>
+  <li><p>For any two indices \(i, j \in I\) with \(i {\lt} j\), we must have \(|k_j - k_i| \leq j - i\). This constrains the head’s movement between any two write operations. </p>
+</li>
+</ol>
+</li>
+</ol>
+
+  </div>
+</div>
+<p>These conditions lead to our first main result, which shows that all TM-generated sequences have this structure. </p>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:forward_characterization">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">3</span>
+    <span class="theorem_thmtitle">Forward Characterization</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#thm:forward_characterization">#</a>
+    
+    <a class="icon proof" href="sect0003.html#a0000000012"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#def:binary_step_sequence">Definition 2</a></li>
+          
+          <li><a href="sect0004.html#lem:encode_diff_at_write">Lemma 5</a></li>
+          
+          <li><a href="sect0004.html#lem:sequence_diff_is_power_of_two">Lemma 6</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.tm_sequence_is_binary_step_sequence" class="lean_decl">LeftTM0.tm_sequence_is_binary_step_sequence</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    Every TM-generated sequence is a binary step sequence. </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000012">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  <p>Let \((s_t)\) be a sequence generated by a TM according to Definition <a href="sect0002.html#def:encoding">1</a>. </p>
+<ol class="enumerate">
+  <li><p>The initial tape is all zeros, so \(s_0 = \sum _{i=0}^\infty 0 \cdot 2^i = 0\). </p>
+</li>
+  <li><p>At step \(t\), the TM is at position \(p_t\). It reads the bit \(b = T_t(p_t)\) and writes a new bit \(b'\). The change in the integer value is \((b' - b) \cdot 2^{p_t}\). Since \(b, b' \in \{ 0, 1\} \), this difference is either \(0\), \(2^{p_t}\) (if \(b=0, b'=1\)), or \(-2^{p_t}\) (if \(b=1, b'=0\)). This satisfies condition 2, with \(k = p_t\). </p>
+</li>
+  <li><p>Let \(I\) be the set of steps with non-zero changes. For any \(t \in I\), the change occurs at the head position \(p_t\), so \(|s_{t+1} - s_t| = 2^{p_t}\). This implies \(k_t = p_t\) for all \(t \in I\). We must verify the conditions on \((k_t)\), which are now conditions on the head path \((p_t)\). </p>
+<ol class="enumerate">
+  <li><p>The head starts at \(p_0=0\) and at each step can move at most one position. Therefore, after \(t\) steps, its position \(p_t\) is at most \(t\). Thus, \(k_t = p_t \leq t\). </p>
+</li>
+  <li><p>For any \(i, j \in I\) with \(i {\lt} j\), the head moves from position \(p_i\) to \(p_j\) in \(j-i\) steps. The maximum distance it can travel is \(j-i\). Therefore, \(|p_j - p_i| \leq j-i\). Substituting \(p_t=k_t\), we get \(|k_j - k_i| \leq j-i\). </p>
+</li>
+</ol>
+</li>
+</ol>
+<p> Thus, any TM-generated sequence satisfies all conditions of a binary step sequence. </p>
+
+  </div>
+</div>
+<p>An immediate consequence of the definition is a tight bound on the growth of the sequence. </p>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:growth_bound">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">4</span>
+    <span class="theorem_thmtitle">Sequence Growth Bound</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0003.html#thm:growth_bound">#</a>
+    
+    <a class="icon proof" href="sect0003.html#a0000000013"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#def:binary_step_sequence">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.binary_step_sequence_growth_bound" class="lean_decl">LeftTM0.binary_step_sequence_growth_bound</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    If \((s_t)_{t \geq 0}\) is a binary step sequence, then for any \(t \geq 0\), we have \(s_t {\lt} 2^{t+1}\). </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000013">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  <p>At any time \(t\), the set of tape positions that could possibly have been written to are \(\{ 0, 1, \ldots , t\} \), since the head starts at \(p_0=0\) and can move at most one position per step. Therefore, for any \(i {\gt} t\), the tape cell at position \(i\) must contain its initial value of \(0\). The maximum possible value for \(s_t\) occurs if all reachable tape cells contain a ’1’: </p>
+<div class="displaymath" id="a0000000014">
+  \[ s_t \leq \sum _{i=0}^{t} 1 \cdot 2^i = 2^{t+1} - 1 \]
+</div>
+<p> Thus, \(s_t {\lt} 2^{t+1}\). </p>
+
+  </div>
+</div>
+
+</div> <!--main-text -->
+</div> <!-- content-wrapper -->
+</div> <!-- content -->
+</div> <!-- wrapper -->
+
+<nav class="prev_up_next">
+  <svg  id="showmore-minus" class="icon icon-eye-minus showmore"><use xlink:href="symbol-defs.svg#icon-eye-minus"></use></svg>
+
+  <svg  id="showmore-plus" class="icon icon-eye-plus showmore"><use xlink:href="symbol-defs.svg#icon-eye-plus"></use></svg>
+
+  <a href="sect0002.html" title="The Basic Construction"><svg  class="icon icon-arrow-left "><use xlink:href="symbol-defs.svg#icon-arrow-left"></use></svg>
+</a>
+  <a href="index.html" title="Integer Sequences from Turing Machine Tapes"><svg  class="icon icon-arrow-up "><use xlink:href="symbol-defs.svg#icon-arrow-up"></use></svg>
+</a>
+  <a href="sect0004.html" title="Supporting Lemmas"><svg  class="icon icon-arrow-right "><use xlink:href="symbol-defs.svg#icon-arrow-right"></use></svg>
+</a>
+</nav>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/plastex.js"></script>
+<script type="text/javascript" src="js/svgxuse.js"></script>
+<script type="text/javascript" src="js/js.cookie.min.js"></script>
+<script type="text/javascript" src="js/showmore.js"></script>
+</body>
+</html>

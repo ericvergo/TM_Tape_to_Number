@@ -1,0 +1,479 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dependency graph</title>
+  <meta name="generator" content="plasTeX" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles/theme-white.css" />
+  <link rel="stylesheet" href="styles/dep_graph.css" />
+  
+  <script type="text/x-mathjax-config">
+  
+    MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+  
+  </script>
+
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">  </script>
+
+
+<link rel="stylesheet" href="styles/extra_styles.css" />
+
+</head>
+
+<body>
+<header>
+  <a class="toc" href="index.html">Home</a>
+  <h1 id="doc_title">Dependencies</h1>
+</header>
+<div class="wrapper">
+<div class="content">
+  <div id="Legend">
+    <span id="legend_title" class="title">Legend
+    <div class="btn">
+       <div class="bar"></div>
+       <div class="bar"></div>
+       <div class="bar"></div>
+    </div></span> 
+    <dl class="legend">
+      
+      <dt>Boxes</dt><dd>definitions</dd>
+      
+      <dt>Ellipses</dt><dd>theorems and lemmas</dd>
+      
+      <dt>Blue border</dt><dd>the <em>statement</em> of this result is ready to be formalized; all prerequisites are done</dd>
+      
+      <dt>Orange border</dt><dd>the <em>statement</em> of this result is not ready to be formalized; the blueprint needs more work</dd>
+      
+      <dt>Blue background</dt><dd>the <em>proof</em> of this result is ready to be formalized; all prerequisites are done</dd>
+      
+      <dt>Green border</dt><dd>the <em>statement</em> of this result is formalized</dd>
+      
+      <dt>Green background</dt><dd>the <em>proof</em> of this result is formalized</dd>
+      
+      <dt>Dark green background</dt><dd>the <em>proof</em> of this result and all its ancestors are formalized</dd>
+      
+      <dt>Dark green border</dt><dd>this is in Mathlib</dd>
+      
+    </dl>
+  </div>
+    <div id="graph"></div>
+<div id="statements">
+
+    
+    <div class="dep-modal-container" id="def:binary_step_sequence_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:binary_step_sequence" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">2</span><span class="definition_thmtitle">Binary Step Sequence</span></div>
+    <div class="thm_thmcontent"><p>    A sequence \((s_t)_{t\geq 0}\) is a <em>binary step sequence</em> if it meets all of the following conditions: </p>
+<ol class="enumerate">
+  <li><p>\(s_0 = 0\). </p>
+</li>
+  <li><p>For each step \(t \geq 0\), the difference \(\delta _t = s_{t+1} - s_t\) is either \(0\) or has the form \(\pm 2^k\) for some non-negative integer \(k\). </p>
+</li>
+  <li><p>Let \(I = \{ t \geq 0 \mid \delta _t \neq 0\} \) be the set of indices where the sequence changes. For each \(t \in I\), define \(k_t = \log _2 |\delta _t|\). The following must hold: </p>
+<ol class="enumerate">
+  <li><p>For every \(t \in I\), we must have \(k_t \leq t\). This reflects that the head, starting at position 0, can reach at most position \(t\) after \(t\) steps. </p>
+</li>
+  <li><p>For any two indices \(i, j \in I\) with \(i {\lt} j\), we must have \(|k_j - k_i| \leq j - i\). This constrains the head’s movement between any two write operations. </p>
+</li>
+</ol>
+</li>
+</ol>
+</div>
+
+    <a class="latex_link" href="sect0003.html#def:binary_step_sequence">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.is_binary_step_sequence">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:construct_tm_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:construct_tm" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">10</span><span class="definition_thmtitle">TM Construction Function</span></div>
+    <div class="thm_thmcontent"><p>    Construct a Turing machine that generates a given finite binary step sequence. </p>
+</div>
+
+    <a class="latex_link" href="sect0005.html#def:construct_tm">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.construct_tm_for_sequence">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="def:encoding_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="def:encoding" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">1</span><span class="definition_thmtitle">TM-to-Integer Encoding</span></div>
+    <div class="thm_thmcontent"><p>   Consider a Turing machine \(M\) with: </p>
+<ul class="itemize">
+  <li><p>A tape unbounded to the left, with cells indexed by non-negative integers \(0, 1, 2, \ldots \) </p>
+</li>
+  <li><p>A binary tape alphabet \(\{ 0, 1\} \) </p>
+</li>
+  <li><p>An initial tape configuration where all cells contain \(0\) </p>
+</li>
+  <li><p>A read/write head starting at position \(0\) </p>
+</li>
+</ul>
+<p> Let \(T_t(i)\) be the content of tape cell \(i\) at time step \(t \geq 0\). The integer sequence \((s_t)_{t \geq 0}\) generated by \(M\) is defined by: </p>
+<div class="displaymath" id="a0000000011">
+  \[ s_t = \sum _{i=0}^{\infty } T_t(i) \cdot 2^i \]
+</div>
+<p> We denote the head’s position at the beginning of step \(t\) (i.e., before the transition from \(t\) to \(t+1\)) as \(p_t\). </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#def:encoding">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.encode_config">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="lem:encode_diff_at_write_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="lem:encode_diff_at_write" style="display: none">
+    <div class="thm_thmheading">
+      <span class="lemma_thmcaption">
+      Lemma
+      </span>
+      <span class="lemma_thmlabel">5</span><span class="lemma_thmtitle">Encoding Difference at Write</span></div>
+    <div class="thm_thmcontent"><p>    The difference in encoding when writing at a position is \(\pm 2^k\) where \(k\) is the absolute position. </p>
+</div>
+
+    <a class="latex_link" href="sect0004.html#lem:encode_diff_at_write">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.encode_diff_at_write">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="lem:sequence_diff_is_power_of_two_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="lem:sequence_diff_is_power_of_two" style="display: none">
+    <div class="thm_thmheading">
+      <span class="lemma_thmcaption">
+      Lemma
+      </span>
+      <span class="lemma_thmlabel">6</span><span class="lemma_thmtitle">Sequence Difference is Power of Two</span></div>
+    <div class="thm_thmcontent"><p>    One step of a TM changes the encoding by \(0\) or \(\pm 2^k\). </p>
+</div>
+
+    <a class="latex_link" href="sect0004.html#lem:sequence_diff_is_power_of_two">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.sequence_diff_is_power_of_two">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="lem:sequence_k_bound_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="lem:sequence_k_bound" style="display: none">
+    <div class="thm_thmheading">
+      <span class="lemma_thmcaption">
+      Lemma
+      </span>
+      <span class="lemma_thmlabel">8</span><span class="lemma_thmtitle">K Value Bound</span></div>
+    <div class="thm_thmcontent"><p>    The \(k\) value is bounded by the step number: \(k \leq t\). </p>
+</div>
+
+    <a class="latex_link" href="sect0004.html#lem:sequence_k_bound">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.sequence_k_bound">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="lem:sequence_k_equals_position_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="lem:sequence_k_equals_position" style="display: none">
+    <div class="thm_thmheading">
+      <span class="lemma_thmcaption">
+      Lemma
+      </span>
+      <span class="lemma_thmlabel">7</span><span class="lemma_thmtitle">K Value Equals Position</span></div>
+    <div class="thm_thmcontent"><p>    The \(k\) value in a sequence change equals the absolute position where the write occurred. </p>
+</div>
+
+    <a class="latex_link" href="sect0004.html#lem:sequence_k_equals_position">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.sequence_k_equals_position">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="lem:sequence_k_movement_constraint_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="lem:sequence_k_movement_constraint" style="display: none">
+    <div class="thm_thmheading">
+      <span class="lemma_thmcaption">
+      Lemma
+      </span>
+      <span class="lemma_thmlabel">9</span><span class="lemma_thmtitle">Movement Constraint</span></div>
+    <div class="thm_thmcontent"><p>    Movement constraint between \(k\) values: \(|k_j - k_i| \leq j - i\). </p>
+</div>
+
+    <a class="latex_link" href="sect0004.html#lem:sequence_k_movement_constraint">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.sequence_k_movement_constraint">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="thm:finite_sequence_generation_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="thm:finite_sequence_generation" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">11</span><span class="theorem_thmtitle">Finite Sequence Generation</span></div>
+    <div class="thm_thmcontent"><p>    Every finite binary step sequence is TM-generable. </p>
+</div>
+
+    <a class="latex_link" href="sect0005.html#thm:finite_sequence_generation">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.finite_binary_step_sequence_generable">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="thm:forward_characterization_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="thm:forward_characterization" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">3</span><span class="theorem_thmtitle">Forward Characterization</span></div>
+    <div class="thm_thmcontent"><p>    Every TM-generated sequence is a binary step sequence. </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#thm:forward_characterization">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.tm_sequence_is_binary_step_sequence">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="thm:growth_bound_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="thm:growth_bound" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">4</span><span class="theorem_thmtitle">Sequence Growth Bound</span></div>
+    <div class="thm_thmcontent"><p>    If \((s_t)_{t \geq 0}\) is a binary step sequence, then for any \(t \geq 0\), we have \(s_t {\lt} 2^{t+1}\). </p>
+</div>
+
+    <a class="latex_link" href="sect0003.html#thm:growth_bound">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.binary_step_sequence_growth_bound">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+</div>
+</div> <!-- content -->
+</div> <!-- wrapper -->
+<script src="js/jquery.min.js" type="text/javascript"></script>
+
+<script src="js/d3.min.js"></script>
+<script src="js/hpcc.min.js"></script>
+<script src="js/d3-graphviz.js"></script>
+
+<script type="text/javascript">
+const graphContainer = d3.select("#graph");
+const width = graphContainer.node().clientWidth;
+const height = graphContainer.node().clientHeight;
+
+
+graphContainer.graphviz({useWorker: true})
+    .width(width)
+    .height(height)
+    .fit(true)
+    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	"lem:encode_diff_at_write"	[color="#FFAA33",		label=encode_diff_at_write,		shape=ellipse];	"lem:sequence_diff_is_power_of_two"	[color="#FFAA33",		label=sequence_diff_is_power_of_two,		shape=ellipse];	"lem:encode_diff_at_write" -> "lem:sequence_diff_is_power_of_two"	[style=dashed];	"thm:forward_characterization"	[color=green,		label=forward_characterization,		shape=ellipse];	"lem:sequence_diff_is_power_of_two" -> "thm:forward_characterization"	[style=dashed];	"lem:sequence_k_equals_position"	[color="#FFAA33",		label=sequence_k_equals_position,		shape=ellipse];	"lem:sequence_diff_is_power_of_two" -> "lem:sequence_k_equals_position"	[style=dashed];	"thm:finite_sequence_generation"	[color="#FFAA33",		label=finite_sequence_generation,		shape=ellipse];	"thm:forward_characterization" -> "thm:finite_sequence_generation"	[style=dashed];	"lem:sequence_k_bound"	[color="#FFAA33",		label=sequence_k_bound,		shape=ellipse];	"lem:sequence_k_equals_position" -> "lem:sequence_k_bound"	[style=dashed];	"lem:sequence_k_movement_constraint"	[color="#FFAA33",		label=sequence_k_movement_constraint,		shape=ellipse];	"lem:sequence_k_equals_position" -> "lem:sequence_k_movement_constraint"	[style=dashed];	"def:construct_tm"	[color="#FFAA33",		label=construct_tm,		shape=box];	"def:construct_tm" -> "thm:finite_sequence_generation"	[style=dashed];	"def:encoding"	[color=green,		fillcolor="#B0ECA3",		label=encoding,		shape=box,		style=filled];	"def:encoding" -> "lem:encode_diff_at_write"	[style=dashed];	"def:binary_step_sequence"	[color=green,		fillcolor="#B0ECA3",		label=binary_step_sequence,		shape=box,		style=filled];	"def:encoding" -> "def:binary_step_sequence"	[style=dashed];	"def:binary_step_sequence" -> "thm:forward_characterization"	[style=dashed];	"def:binary_step_sequence" -> "def:construct_tm"	[style=dashed];	"thm:growth_bound"	[color="#FFAA33",		label=growth_bound,		shape=ellipse];	"def:binary_step_sequence" -> "thm:growth_bound"	[style=dashed];}`)
+    .on("end", interactive);
+
+latexLabelEscaper = function(label) {
+  return label.replace(/\./g, '\\.').replace(/:/g, '\\:')
+}
+
+clickNode = function() {
+  $("#statements div").hide()
+  var node_id = $('text', this).text();
+  $('.thm').hide();
+  $('#'+latexLabelEscaper(node_id)).show().children().show();
+}
+function interactive() {
+    $("span#legend_title").on("click", function () {
+           $(this).siblings('dl').toggle();
+        })
+
+    d3.selectAll('.node')
+        .attr('pointer-events', 'fill')
+        .on('click', function () {
+           var title = d3.select(this).selectAll('title').text().trim();
+           $('#statements > div').hide()
+           $('.thm').hide();
+           $('#'+latexLabelEscaper(title)+'_modal').show().children().show().children().show();
+           $('#statements').show()
+        });
+
+    d3.selectAll('.dep-closebtn').on('click', function() {
+        var modal =
+            d3.select(this).node().parentNode.parentNode.parentNode ;
+        d3.select(modal).style('display', 'none');
+    });
+}
+
+</script>
+
+</body>
+</html>

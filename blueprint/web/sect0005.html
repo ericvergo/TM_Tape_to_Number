@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  MathJax = { 
+    tex: {
+		    inlineMath: [['$','$'], ['\\(','\\)']]
+	} }
+</script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+<meta name="generator" content="plasTeX" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Universality Results</title>
+<link rel="next" href="sect0006.html" title="Connections and Open Questions" />
+<link rel="prev" href="sect0004.html" title="Supporting Lemmas" />
+<link rel="up" href="index.html" title="Integer Sequences from Turing Machine Tapes" />
+<link rel="stylesheet" href="styles/theme-white.css" />
+<link rel="stylesheet" href="styles/amsthm.css" />
+<link rel="stylesheet" href="styles/showmore.css" />
+<link rel="stylesheet" href="styles/blueprint.css" />
+<link rel="stylesheet" href="styles/extra_styles.css" />
+</head>
+
+<body>
+<header>
+<svg  id="toc-toggle" class="icon icon-list-numbered "><use xlink:href="symbol-defs.svg#icon-list-numbered"></use></svg>
+<h1 id="doc_title"><a href="index.html">Integer Sequences from Turing Machine Tapes</a></h1>
+</header>
+
+<div class="wrapper">
+<nav class="toc">
+<ul class="sub-toc-0">
+<li class="">
+  <a href="sect0001.html"><span class="toc_ref">1</span> <span class="toc_entry">Introduction</span></a>
+ </li>
+<li class="">
+  <a href="sect0002.html"><span class="toc_ref">2</span> <span class="toc_entry">The Basic Construction</span></a>
+ </li>
+<li class="">
+  <a href="sect0003.html"><span class="toc_ref">3</span> <span class="toc_entry">Structural Properties</span></a>
+ </li>
+<li class="">
+  <a href="sect0004.html"><span class="toc_ref">4</span> <span class="toc_entry">Supporting Lemmas</span></a>
+ </li>
+<li class=" active current">
+  <a href="sect0005.html"><span class="toc_ref">5</span> <span class="toc_entry">Universality Results</span></a>
+ </li>
+<li class="">
+  <a href="sect0006.html"><span class="toc_ref">6</span> <span class="toc_entry">Connections and Open Questions</span></a>
+  <span class="expand-toc">▶</span>
+  <ul class="sub-toc-1">
+     <li class="">
+  <a href="sect0006.html#a0000000009"><span class="toc_ref"></span> <span class="toc_entry">Alternative Encodings.</span></a>
+ </li>
+<li class="">
+  <a href="sect0006.html#a0000000010"><span class="toc_ref"></span> <span class="toc_entry">Complexity of Generation.</span></a>
+ </li>
+
+  </ul>
+ </li>
+<li class="">
+  <a href="sect0007.html"><span class="toc_ref">7</span> <span class="toc_entry">Conclusion</span></a>
+ </li>
+<li ><a href="dep_graph_document.html">Dependency graph</a></li>
+</ul>
+</nav>
+
+<div class="content">
+<div class="content-wrapper">
+
+
+<div class="main-text">
+<h1 id="a0000000006">5 Universality Results</h1>
+<p>The definition of a <em>finite</em> binary step sequence is not just a property of TM-generated sequences; it is a complete characterization. Every <em>finite</em> sequence satisfying these conditions can be realized by a Turing machine. </p>
+<div class="definition_thmwrapper theorem-style-definition" id="def:construct_tm">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">10</span>
+    <span class="definition_thmtitle">TM Construction Function</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0005.html#def:construct_tm">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#def:binary_step_sequence">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.construct_tm_for_sequence" class="lean_decl">LeftTM0.construct_tm_for_sequence</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>    Construct a Turing machine that generates a given finite binary step sequence. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="thm:finite_sequence_generation">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">11</span>
+    <span class="theorem_thmtitle">Finite Sequence Generation</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0005.html#thm:finite_sequence_generation">#</a>
+    
+    <a class="icon proof" href="sect0005.html#a0000000015"><svg  class="icon icon-cogs "><use xlink:href="symbol-defs.svg#icon-cogs"></use></svg>
+</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0003.html#def:binary_step_sequence">Definition 2</a></li>
+          
+          <li><a href="sect0005.html#def:construct_tm">Definition 10</a></li>
+          
+          <li><a href="sect0003.html#thm:forward_characterization">Theorem 3</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://ericvergo.github.io/TM_Tape_to_Number/docs/find/#doc/LeftTM0.finite_binary_step_sequence_generable" class="lean_decl">LeftTM0.finite_binary_step_sequence_generable</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    Every finite binary step sequence is TM-generable. </p>
+
+  </div>
+</div>
+<div class="proof_wrapper" id="a0000000015">
+  <div class="proof_heading">
+    <span class="proof_caption">
+    Proof
+    </span>
+    <span class="expand-proof">▶</span>
+  </div>
+  <div class="proof_content">
+  <p>Let \(S = (s_0, s_1, \ldots , s_n)\) be a finite binary step sequence. We must construct a TM that generates it. This requires defining a valid head path \((p_0, p_1, \ldots , p_{n-1})\) that is consistent with the sequence properties. </p>
+<p>First, we define the head path at moments of writing. Let \(I = \{ t \in [0, n-1] \mid s_{t+1} \neq s_t\} \), and let \(k_t = \log _2|s_{t+1} - s_t|\) for \(t \in I\). A consistent head path must have \(p_t = k_t\) for all \(t \in I\). </p>
+<p>Next, we construct the full path by defining \(p_t\) for \(t \notin I\). Consider any two consecutive indices \(i, j\) in the augmented set \(I' = I \cup \{ -1, n\} \), where we define \(k_{-1} = 0\). For any \(t\) such that \(i {\lt} t {\lt} j\), we must define a path from \(p_i=k_i\) to \(p_j=k_j\) in \(j-i\) steps. By Definition <a href="sect0003.html#def:binary_step_sequence">2</a>.3(b), we know \(|k_j - k_i| \leq j-i\). This guarantees that such a path exists. For instance, a valid path moves one unit towards \(k_j\) for \(|k_j - k_i|\) steps, and then stays put for the remaining \(j - i - |k_j - k_i|\) steps. This constructs a complete and valid head path \((p_0, \ldots , p_{n-1})\) where \(|p_{t+1} - p_t| \leq 1\) for all \(t\). </p>
+<p>With this path, we construct the TM. The TM has \(n+1\) states, \(q_0, \ldots , q_n\), where \(q_n\) is the halt state. For each \(t\) from \(0\) to \(n-1\), state \(q_t\) is designed to perform step \(t\) of the computation: </p>
+<ol class="enumerate">
+  <li><p>In state \(q_t\), the TM reads the bit at position \(p_t\). </p>
+</li>
+  <li><p>If \(t \in I\), it writes ’1’ if \(s_{t+1} - s_t {\gt} 0\) and ’0’ if \(s_{t+1} - s_t {\lt} 0\). If \(t \notin I\), it writes back the same bit it read. </p>
+</li>
+  <li><p>It moves the head according to the pre-defined path: left if \(p_{t+1}-p_t = -1\), right if \(p_{t+1}-p_t=1\), and no move if \(p_{t+1}-p_t=0\). </p>
+</li>
+  <li><p>It transitions to state \(q_{t+1}\). </p>
+</li>
+</ol>
+<p> This machine, by construction, faithfully reproduces the sequence \(S\). </p>
+
+  </div>
+</div>
+<div class="conjecture_thmwrapper theorem-style-plain" id="a0000000016">
+  <div class="conjecture_thmheading">
+    <span class="conjecture_thmcaption">
+    Conjecture
+    </span>
+    <span class="conjecture_thmlabel">12</span>
+    <div class="thm_header_extras">
+
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0005.html#a0000000016">#</a>
+    
+    
+    
+        </div>
+  </div>
+  <div class="conjecture_thmcontent">
+  <p>Not every infinite binary step sequence is TM-generable. </p>
+
+  </div>
+</div>
+<p><em>Justification</em>: While any finite prefix can be generated, a single, finite-state TM must generate the entire infinite sequence. An infinite binary step sequence could, for example, encode the solution to the Halting Problem by having its \(m\)-th write operation depend on the halting behavior of the \(m\)-th Turing machine. Such a sequence, while satisfying the local kinematic constraints, would not be computable and thus not generable by any single TM. </p>
+
+</div> <!--main-text -->
+</div> <!-- content-wrapper -->
+</div> <!-- content -->
+</div> <!-- wrapper -->
+
+<nav class="prev_up_next">
+  <svg  id="showmore-minus" class="icon icon-eye-minus showmore"><use xlink:href="symbol-defs.svg#icon-eye-minus"></use></svg>
+
+  <svg  id="showmore-plus" class="icon icon-eye-plus showmore"><use xlink:href="symbol-defs.svg#icon-eye-plus"></use></svg>
+
+  <a href="sect0004.html" title="Supporting Lemmas"><svg  class="icon icon-arrow-left "><use xlink:href="symbol-defs.svg#icon-arrow-left"></use></svg>
+</a>
+  <a href="index.html" title="Integer Sequences from Turing Machine Tapes"><svg  class="icon icon-arrow-up "><use xlink:href="symbol-defs.svg#icon-arrow-up"></use></svg>
+</a>
+  <a href="sect0006.html" title="Connections and Open Questions"><svg  class="icon icon-arrow-right "><use xlink:href="symbol-defs.svg#icon-arrow-right"></use></svg>
+</a>
+</nav>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/plastex.js"></script>
+<script type="text/javascript" src="js/svgxuse.js"></script>
+<script type="text/javascript" src="js/js.cookie.min.js"></script>
+<script type="text/javascript" src="js/showmore.js"></script>
+</body>
+</html>

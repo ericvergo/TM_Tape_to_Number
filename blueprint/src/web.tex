@@ -1,0 +1,35 @@
+\documentclass{report}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage[showmore, dep_graph]{blueprint}
+
+% Define theorem environments directly here
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
+% Define blueprint macros
+\newcommand{\lean}[1]{\texttt{#1}}
+\newcommand{\leanok}{}
+\newcommand{\notready}{}
+\newcommand{\uses}[1]{}
+
+\home{https://ericvergo.github.io/TM_Tape_to_Number}
+\github{https://github.com/ericvergo/TM_Tape_to_Number}
+\dochome{https://ericvergo.github.io/TM_Tape_to_Number/docs}
+
+\title{Integer Sequences from Turing Machine Tapes}
+\author{Eric Vergo}
+
+\begin{document}
+\maketitle
+\input{content}
+\end{document}

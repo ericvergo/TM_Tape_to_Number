@@ -1,0 +1,18 @@
+
+Welcome to Lean blueprint
+
+We will now ask some questions to configure your blueprint. All answers can be 
+changed later by editing either the plastex.cfg file or the tex files.
+
+General information about the project
+Project title (My formalization project): Author (use \and to separate authors if needed) (Eric Vergo): URL of GitHub repository (https://github.com/ericvergo/TM_Tape_to_Number): URL of project website (https://ericvergo.github.io/TM_Tape_to_Number): URL of project API documentation 
+(https://ericvergo.github.io/TM_Tape_to_Number/docs): 
+LaTeX settings for the pdf version
+LaTeX document class (report): LaTeX paper (a4paper): 
+LaTeX settings for the web version
+Show buttons allowing to show or hide all proofs [y/n] (y): Table of contents depth (3): Split file level (0 means each chapter gets a file, 1 means the same for 
+sections etc.) (0): Per html file local table of contents depth (0 means there will be no local 
+table of contents) (0): 
+Configuration completed
+Proceed with blueprint creation? [y/n]: 
+Aborted.

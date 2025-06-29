@@ -1,0 +1,70 @@
+..
+ (loading package
+   /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-
+   packages/plasTeX/Packages/report.py
+ )..
+ (loading package
+   /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-
+   packages/plasTeX/Packages/amssymb.py
+ )
+ (loading package
+   /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-
+   packages/plasTeX/Packages/amsthm.py
+ )
+ (loading package
+   /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-
+   packages/plasTeX/Packages/amsmath.py
+ )
+ (loading package
+   /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-
+   packages/plasTeX/Packages/hyperref.py
+ )
+ (loading package
+   /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-
+   packages/leanblueprint/Packages/blueprint.py
+ (loading package
+   /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-
+   packages/plastexdepgraph/Packages/depgraph.py
+ )
+ (loading package
+   /Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-
+   packages/plastexshowmore/Packages/showmore.py
+ ) )..
+WARNING: File not found: macros/common
+WARNING: File not found: macros/web
+...... ( ./content.tex )...........
+WARNING: unrecognized command/environment: definition
+............
+WARNING: unrecognized command/environment: theorem
+..............
+WARNING: unrecognized command/environment: lemma
+.......................
+WARNING: unrecognized command/environment: conjecture
+...........................plasTeX version 3.1
+Unrecognized section: plastexdepgraph
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.13/bin/plastex", line 8, in <module>
+    sys.exit(plastex())
+             ~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/plasTeX/client.py", line 72, in plastex
+    main(sys.argv[1:])
+    ~~~~^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/plasTeX/client.py", line 52, in main
+    run(filename, config)
+    ~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/plasTeX/Compile.py", line 90, in run
+    tex = parse(filename, config)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/plasTeX/Compile.py", line 85, in parse
+    tex.parse()
+    ~~~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/plasTeX/TeX.py", line 428, in parse
+    callback()
+    ~~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/plastexdepgraph/Packages/depgraph.py", line 317, in makegraphs
+    makegraph(document, title)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/plastexdepgraph/Packages/depgraph.py", line 292, in makegraph
+    graph.nodes = set(nodes)
+                  ~~~^^^^^^^
+TypeError: unhashable type: 'definition'
+Command 'plastex -c plastex.cfg web.tex' returned non-zero exit status 1.
