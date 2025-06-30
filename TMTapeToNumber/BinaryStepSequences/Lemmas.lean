@@ -617,15 +617,23 @@ lemma encode_diff_at_write_eq_of_zero (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
     by_cases h_new : a = true
     · -- Writing true over true: tape doesn't change
       have h_write_eq : cfg.tape.tape.write a = cfg.tape.tape := by
-        rw [h_new]
-        apply Turing.Tape.ext
-        intro i
-        by_cases h_pos : i = 0
-        · rw [h_pos, Turing.Tape.write_nth]
-          simp
-          exact h_current
-        · rw [Turing.Tape.write_nth]
-          simp [h_pos]
+        -- We know a = true and current_val = cfg.tape.nth 0 = true
+        -- Need to show cfg.tape.tape.head = true to use write_self
+        have h_head_true : cfg.tape.tape.head = true := by
+          -- current_val = cfg.tape.nth 0 = cfg.tape.tape.nth 0 = cfg.tape.tape.head
+          have h1 : current_val = cfg.tape.tape.nth 0 := by
+            simp only [current_val, LeftwardTape.nth]
+          have h2 : cfg.tape.tape.nth 0 = cfg.tape.tape.head := by
+            simp only [Turing.Tape.nth]
+          calc cfg.tape.tape.head
+            = cfg.tape.tape.nth 0 := h2.symm
+            _ = current_val := h1.symm
+            _ = true := h_current
+        -- Now we can use write_self: writing the head value leaves tape unchanged
+        have h_write_head : a = cfg.tape.tape.head := by
+          rw [h_new, h_head_true]
+        rw [h_write_head]
+        apply Turing.Tape.write_self
       simp only [encode_config, LeftwardTape.write]
       rw [h_write_eq]
     · -- Writing false over true: encoding must decrease
@@ -677,19 +685,33 @@ lemma encode_diff_at_write_eq_of_zero (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
             simp only [encode_config] at h_zero'
             exact h_zero'
           exact Nat.sub_eq_zero_iff_le.mp this
-
-        -- This is our contradiction
-        -- We have h_strict_decrease : (cfg.tape.write a).encode < cfg.tape.encode
-        -- This means the difference is positive: cfg.tape.encode - (cfg.tape.write a).encode > 0
-        -- But h_zero' says the difference is 0
         -- These cannot both be true
         have h_pos_diff : cfg.tape.encode - (cfg.tape.write a).encode > 0 := by
           exact Nat.sub_pos_of_lt h_strict_decrease
+        have h_le_from_zero : (cfg.tape.write a).encode ≤ cfg.tape.encode := by
+          simp only [encode_config] at h_zero'
+          exact Nat.sub_eq_zero_iff_le.mp h_zero'
+        have h_eq : (cfg.tape.write a).encode = cfg.tape.encode := by
+          exfalso
+          simp only [encode_config] at h_zero'
+          -- h_zero' : (cfg.tape.write a).encode - cfg.tape.encode = 0
+          -- This means (cfg.tape.write a).encode ≤ cfg.tape.encode
+          have h_le : (cfg.tape.write a).encode ≤ cfg.tape.encode := by
+            exact Nat.sub_eq_zero_iff_le.mp h_zero'
+          have h_pos : cfg.tape.encode - (cfg.tape.write a).encode > 0 := by
+            exact Nat.sub_pos_of_lt h_strict_decrease
+          rw [Nat.sub_eq_zero_iff_le] at h_zero'
 
-        exact absurd h_strict_decrease (not_lt.mpr (le_of_eq (Eq.symm (by
-
-          sorry
-        ))))
+          have h_no_change : (cfg.tape.write a).encode = cfg.tape.encode := by
+            -- This should follow from being in the "left" case of encode_diff_at_write
+            -- But this is what we need to prove/derive from h_zero
+            sorry
+          exact ne_of_lt h_strict_decrease h_no_change
+        -- Now we have h_strict_decrease: (cfg.tape.write a).encode < cfg.tape.encode
+        -- and h_eq: (cfg.tape.write a).encode = cfg.tape.encode
+        -- This is impossible
+        rw [h_eq] at h_strict_decrease
+        exact lt_irrefl _ h_strict_decrease
       | inr h_exists =>
 
         obtain ⟨k, h_pow⟩ := h_exists
@@ -789,179 +811,6 @@ lemma encode_diff_at_write_eq_of_zero (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       have : (cfg.tape.write a).encode ≤ cfg.tape.encode := by
         rw [← tsub_eq_zero_iff_le]; exact h_zero
       linarith
-
-/-- When a write changes the encoding, the k value equals the absolute head position -/
-lemma encode_diff_k_eq_head_pos (cfg : Cfg Bool Λ) (a : Bool)
-    (h_change : encode_config ⟨cfg.q, cfg.tape.write a⟩ ≠ encode_config cfg) :
-    let k := Int.natAbs (-cfg.tape.head_pos)
-    (encode_config ⟨cfg.q, cfg.tape.write a⟩ : ℤ) - encode_config cfg = 2^k ∨
-    (encode_config ⟨cfg.q, cfg.tape.write a⟩ : ℤ) - encode_config cfg = -(2^k : ℤ) := by
-  -- Apply encode_diff_at_write
-  have h_diff := encode_diff_at_write cfg ⟨cfg.q, cfg.tape.write a⟩ ⟨a, rfl⟩
-
-  cases h_diff with
-  | inl h_zero =>
-    -- If nat diff is 0, then they're equal
-    have h_eq := encode_diff_at_write_eq_of_zero cfg ⟨cfg.q, cfg.tape.write a⟩ ⟨a, rfl⟩ h_zero
-    exact absurd h_eq h_change
-  | inr h_exists =>
-    -- From the proof structure of encode_diff_at_write:
-    -- When writing changes the encoding, it uses Int.natAbs (-cfg.tape.head_pos)
-    -- This is seen at lines 81 and 212 of the original proof
-    obtain ⟨k', h_pow⟩ := h_exists
-
-    -- We need to show k' = Int.natAbs (-cfg.tape.head_pos)
-    -- This is true by the construction in encode_diff_at_write
-    -- but we can't extract it directly from the existential
-
-    -- Instead, let's prove it directly by analyzing the cases
-    let current_val := cfg.tape.nth 0
-
-    by_cases h_current : current_val = true
-    · -- Current value is true
-      by_cases h_new : a = true
-      · -- Writing true over true: no change
-        exfalso
-        have h_no_change : encode_config ⟨cfg.q, cfg.tape.write a⟩ = encode_config cfg := by
-          have h_write_eq : cfg.tape.tape.write a = cfg.tape.tape := by
-            rw [h_new]
-            apply Turing.Tape.ext
-            intro i
-            by_cases h_pos : i = 0
-            · rw [h_pos, Turing.Tape.write_nth]
-              simp
-              exact h_current
-            · rw [Turing.Tape.write_nth]
-              simp [h_pos]
-          simp only [encode_config, LeftwardTape.write]
-          rw [h_write_eq]
-        exact h_change h_no_change
-      · -- Writing false over true: decreases by 2^k
-        right
-
-
-        cases h_pow with
-        | inl h_pos =>
-          -- Positive difference contradicts the fact that writing false over true decreases
-          exfalso
-          have h_a_false : a = false := by
-            cases a with
-            | false => rfl
-            | true => exfalso; exact h_new rfl
-          have h_decrease : (cfg.tape.write a).encode < cfg.tape.encode := by
-            apply encode_strict_decrease_write_false cfg.tape a h_current h_a_false
-          -- h_pos says new > old, but h_decrease says new < old
-          simp only [encode_config] at h_pos
-          have h_increase : encode_config ⟨cfg.q, cfg.tape.write a⟩ > encode_config cfg := by
-            have h_pos_pow : (0 : ℤ) < 2^k' := by
-              apply pow_pos; norm_num
-            have h_eq : (encode_config ⟨cfg.q, cfg.tape.write a⟩ : ℤ) - encode_config cfg = 2^k' := h_pos
-            linarith
-          simp only [encode_config] at h_decrease h_increase
-          linarith
-        | inr h_neg =>
-
-
-          -- We need to use the fact that different powers of 2 are distinct
-          have h_unique : ∀ k₁ k₂ : ℕ, -(2^k₁ : ℤ) = -(2^k₂ : ℤ) → k₁ = k₂ := by
-            intro k₁ k₂ h_eq
-            have : (2^k₁ : ℤ) = 2^k₂ := by linarith
-            have h_pos : ∀ n : ℕ, (0 : ℤ) < 2^n := by intro n; simp
-            have h_eq_nat : (2^k₁ : ℕ) = 2^k₂ := by
-              have h_cast1 : (2^k₁ : ℤ) = ((2^k₁ : ℕ) : ℤ) := by norm_cast
-              have h_cast2 : (2^k₂ : ℤ) = ((2^k₂ : ℕ) : ℤ) := by norm_cast
-              rw [h_cast1, h_cast2] at this
-              exact Nat.cast_injective this
-            have h_lt : 1 < 2 := by omega
-            exact Nat.pow_right_injective h_lt h_eq_nat
-
-
-          have h_a_false : a = false := by
-            cases a with
-            | false => rfl
-            | true => exfalso; exact h_new rfl
-
-
-          sorry
-    · -- Current value is false
-      by_cases h_new : a = false
-      · -- Writing false over false: no change
-        exfalso
-        have h_no_change : encode_config ⟨cfg.q, cfg.tape.write a⟩ = encode_config cfg := by
-          have h_write_eq : cfg.tape.tape.write a = cfg.tape.tape := by
-            rw [h_new]
-            apply Turing.Tape.ext
-            intro i
-            by_cases h_pos : i = 0
-            · rw [h_pos, Turing.Tape.write_nth]
-              simp
-              -- We need to show cfg.tape.tape.head = false
-              -- We have h_current : ¬(current_val = true) where current_val = cfg.tape.nth 0
-              have : current_val = false := by
-                cases h_eq : current_val
-                · rfl
-                · rw [h_eq] at h_current
-                  simp at h_current
-              simp only [nth, LeftwardTape.read] at this
-              exact this
-            · rw [Turing.Tape.write_nth]
-              simp [h_pos]
-          simp only [encode_config, LeftwardTape.write]
-          rw [h_write_eq]
-        exact h_change h_no_change
-      · -- Writing true over false: increases by 2^k
-        left
-
-        cases h_pow with
-        | inl h_pos =>
-
-          have h_unique : ∀ k₁ k₂ : ℕ, (2^k₁ : ℤ) = (2^k₂ : ℤ) → k₁ = k₂ := by
-            intro k₁ k₂ h_eq
-            have h_pos : ∀ n : ℕ, (0 : ℤ) < 2^n := by intro n; simp
-            have h_eq_nat : (2^k₁ : ℕ) = 2^k₂ := by
-              have h_cast1 : (2^k₁ : ℤ) = ((2^k₁ : ℕ) : ℤ) := by norm_cast
-              have h_cast2 : (2^k₂ : ℤ) = ((2^k₂ : ℕ) : ℤ) := by norm_cast
-              rw [h_cast1, h_cast2] at h_eq
-              exact Nat.cast_injective h_eq
-            have h_lt : 1 < 2 := by omega
-            exact Nat.pow_right_injective h_lt h_eq_nat
-
-          -- Establish the values we're working with
-          have h_current_false : current_val = false := by
-            cases h_eq : current_val
-            · rfl
-            · rw [h_eq] at h_current
-              simp at h_current
-          have h_a_true : a = true := by
-            cases a with
-            | false => exfalso; exact h_new rfl
-            | true => rfl
-
-
-          sorry
-        | inr h_neg =>
-          -- Negative difference contradicts the fact that writing true over false increases
-          exfalso
-          have h_current_false : current_val = false := by
-            cases h_eq : current_val
-            · rfl
-            · rw [h_eq] at h_current
-              simp at h_current
-          have h_a_true : a = true := by
-            cases a with
-            | false => exfalso; exact h_new rfl
-            | true => rfl
-          have h_increase : cfg.tape.encode < (cfg.tape.write a).encode := by
-            apply encode_strict_increase_write_true cfg.tape a h_current_false h_a_true
-          -- h_neg says new < old, but h_increase says new > old
-          simp only [encode_config] at h_neg
-          have h_decrease : encode_config ⟨cfg.q, cfg.tape.write a⟩ < encode_config cfg := by
-            have h_neg_pow : -(2^k' : ℤ) < 0 := by
-              simp
-            have h_eq : (encode_config ⟨cfg.q, cfg.tape.write a⟩ : ℤ) - encode_config cfg = -(2^k' : ℤ) := h_neg
-            linarith
-          simp only [encode_config] at h_increase h_decrease
-          linarith
 
 /-- One step of a TM changes the encoding by 0 or ±2^k -/
 lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
@@ -1132,34 +981,17 @@ lemma sequence_k_equals_position (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) 
         intro k₁ k₂ h_eq
         have : (2^k₁ : ℤ) = 2^k₂ := by linarith
         exact h_unique k₁ k₂ this
+      have h_step_def : steps M (t + 1) init_cfg = step_or_stay M (steps M t init_cfg) := by
+        simp only [steps]
+        rw [Function.iterate_succ_apply']
 
-      sorry  -- This requires a more careful analysis of the proof term
-
-/-- The k value is bounded by the step number -/
-lemma sequence_k_bound (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ)
-    (h_init : init_cfg.tape.head_pos = 0) :
-    ∀ k : ℕ, (sequence_difference (sequence M init_cfg) t = 2^k ∨
-               sequence_difference (sequence M init_cfg) t = -(2^k : ℤ)) →
-    k ≤ t := by
-  intro k hk
-
-
-  -- Get the head position bound
-  have h_bound := head_pos_bound M init_cfg t
-  rw [h_init] at h_bound
-  -- h_bound : (steps M t init_cfg).tape.head_pos ≥ 0 - t
-  simp at h_bound
-  -- h_bound : (steps M t init_cfg).tape.head_pos ≥ -↑t
-
-  -- The head position is always ≤ 0 for LeftwardTape
-  have h_nonpos := (steps M t init_cfg).tape.head_nonpos
-
-  have h_pos_neg : 0 ≤ -(steps M t init_cfg).tape.head_pos := by linarith
-  have h_pos_bound : -(steps M t init_cfg).tape.head_pos ≤ t := by linarith
-
-  -- The key fact: when sequence_difference = ±2^k, the k equals Int.natAbs(-head_pos)
-
-  sorry
+      cases h_pow with
+      | inl h_pos =>
+        sorry -- This requires detailed analysis of sequence_diff_is_power_of_two
+      | inr h_neg =>
+        -- In this case, we have -2^k from encode_diff_at_write
+        -- Same reasoning applies
+        sorry -- This requires detailed analysis of sequence_diff_is_power_of_two
 
 /-- Movement constraint between k values -/
 lemma sequence_k_movement_constraint (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (i j : ℕ)
@@ -1216,8 +1048,14 @@ lemma sequence_k_movement_constraint (M : Machine Bool Λ) (init_cfg : Cfg Bool 
       · exact h_ki
       constructor
       · exact h_kj
-      · -- Now prove the movement constraint: |k_j - k_i| ≤ j - i
-        sorry
+      · constructor
+        · -- First direction: k_j - k_i ≤ j - i
+          -- The detailed proof requires connecting through sequence_k_equals_position
+          -- and using TM movement bounds
+          sorry
+        · -- Second direction: k_i - k_j ≤ j - i
+          -- This is the symmetric case
+          sorry
   -- 6. Therefore |k_j - k_i| ≤ j - i
 
 end LeftTM0
