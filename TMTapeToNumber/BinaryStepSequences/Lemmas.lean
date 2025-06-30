@@ -473,7 +473,305 @@ lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool �
             -- The "left" case from encode_diff_at_write occurs when writing doesn't change encoding
             -- h_zero from encode_diff_at_write tells us the integer difference is 0
             -- Since we're subtracting natural numbers cast to integers, this means they're equal
-            sorry
+            -- h_zero : encode(write a) - encode = 0 (as naturals)
+            -- We need: ↑encode(write a) - ↑encode = 0 (as integers)
+            -- When natural subtraction is 0, we have encode(write a) ≤ encode
+            have h_le : ((steps M t init_cfg).tape.write a).encode ≤ (steps M t init_cfg).tape.encode := by
+              exact Nat.sub_eq_zero_iff_le.mp h_zero
+            -- From encode_diff_at_write being in the left case, the encodings don't change
+            -- So they must be equal (not just ≤)
+            -- Looking at the proof of encode_diff_at_write, the left case occurs when
+            -- writing doesn't change the encoding, which happens when:
+            -- 1. Writing true over true, or
+            -- 2. Writing false over false
+            -- In both cases, the encoding stays exactly the same
+            have h_eq : ((steps M t init_cfg).tape.write a).encode = (steps M t init_cfg).tape.encode := by
+              -- The natural subtraction equals 0 could mean either:
+              -- a) The encodings are equal, or
+              -- b) encode(write a) < encode
+              -- But if (b) were true, then the integer difference would be negative
+              -- and encode_diff_at_write would have returned the ∃ k, ... = -2^k case
+              -- Since we're in the left case (natural diff = 0), it must be (a)
+              by_contra h_ne
+              have h_lt : ((steps M t init_cfg).tape.write a).encode < (steps M t init_cfg).tape.encode := by
+                exact Nat.lt_of_le_of_ne h_le h_ne
+              -- This means writing decreased the encoding
+              -- If the encoding strictly decreased, then by the structure of encode_diff_at_write,
+              -- we would have: ∃ k, (encode_config cfg') - (encode_config cfg) = -2^k
+              -- But we have h_result which is the disjunction from encode_diff_at_write
+              -- We're in the left case (h_zero), not the right case
+              -- So the encoding cannot have decreased
+              
+              -- Let's think about what h_result actually says
+              -- h_result came from applying encode_diff_at_write
+              -- We matched on it and we're in the `inl h_zero` case
+              -- This means encode_diff_at_write returned `left (cfg'.encode - cfg.encode = 0)`
+              -- If the encoding had decreased, encode_diff_at_write would have returned
+              -- `right (∃ k, ... = -2^k)` instead
+              
+              -- So we have a contradiction: h_lt says encoding decreased,
+              -- but being in the left case means it didn't change
+              -- This contradiction shows our assumption h_ne is false
+              have h_decreased : (((steps M t init_cfg).tape.write a).encode : ℤ) < 
+                                 ((steps M t init_cfg).tape.encode : ℤ) := by
+                -- h_lt : encode(write a) < encode as naturals
+                -- We need: ↑encode(write a) < ↑encode as integers
+                have : ↑((steps M t init_cfg).tape.write a).encode < (↑(steps M t init_cfg).tape.encode : ℤ) := by
+                  exact Nat.cast_lt.mpr h_lt
+                exact this
+              
+              -- If write decreased the encoding, the integer difference is negative
+              have h_neg_diff : (((steps M t init_cfg).tape.write a).encode : ℤ) - 
+                               ((steps M t init_cfg).tape.encode : ℤ) < 0 := by
+                linarith
+              
+              -- But h_result (via encode_diff_at_write) tells us the difference is 0 or ±2^k
+              -- Since we're in the left case, the difference should be 0 (as naturals)
+              -- The integer difference being negative means we should be in the ∃k, diff = -2^k case
+              -- This contradicts being in the left case
+              
+              -- The contradiction comes from the fact that encode_diff_at_write's proof
+              -- explicitly handles the case where writing false over true gives -2^k
+              -- and returns that in the right branch, not the left branch
+              -- We have h_zero : encode(write a) - encode = 0 (natural subtraction)
+              -- But h_lt : encode(write a) < encode
+              -- For natural subtraction, if a < b then a - b = 0, which is consistent
+              -- So we need a different approach to get the contradiction
+              
+              -- The real contradiction is that encode_diff_at_write would have returned
+              -- the right branch (∃ k, diff = -2^k) if the encoding decreased
+              -- But we're in the left branch, which means the encoding didn't change
+              -- This is fundamentally about the structure of the proof of encode_diff_at_write
+              
+              -- Actually, let's use the fact that we can re-apply encode_diff_at_write
+              -- and it must give us the same result we already have
+              have h_reapply := encode_diff_at_write (steps M t init_cfg) 
+                                   ⟨(steps M t init_cfg).q, (steps M t init_cfg).tape.write a⟩ h_exists
+              -- h_reapply tells us the difference is 0 or ±2^k
+              -- We know we're in the case where natural diff = 0
+              -- If encoding decreased, we'd have integer diff < 0, so it would be -2^k
+              -- But that would put us in the right branch of h_reapply, not the left
+              cases h_reapply with
+              | inl h_zero' =>
+                -- This case: natural diff = 0
+                -- Both h_zero and h_zero' say the natural difference is 0
+                -- From h_zero': encode(write a) - encode = 0 (natural)
+                -- From h_zero: encode(write a) - encode = 0 (natural)
+                -- These are the same, so we have consistency
+                -- But we still haven't proven that the encodings are equal
+                -- 
+                -- The key is to look at what encode_diff_at_write actually proves
+                -- When it returns left, it's showing that the encoding doesn't change
+                -- This happens only when writing the same value (true over true, or false over false)
+                -- In those cases, the encoding is exactly preserved
+                --
+                -- Actually, looking at encode_diff_at_write's proof structure:
+                -- It does case analysis on current value and new value
+                -- Returns left only when they're the same
+                -- In those cases it proves the tapes are equal, hence encodings are equal
+                --
+                -- So if h_zero' holds, the encodings must be equal
+                -- But our h_ne says they're not equal - contradiction!
+                -- 
+                -- To make this formal, we need to understand that natural subtraction = 0
+                -- combined with the fact that encode_diff_at_write exhaustively covers all cases
+                -- means the encodings must be equal
+                -- 
+                -- Since both h_zero and h_zero' say nat diff = 0, and we know from h_neg_diff
+                -- that if encodings were different, we'd have int diff < 0 (so -2^k case),
+                -- the fact we're in the left case means encodings are equal
+                exfalso
+                -- We have h_ne : encode(write a) ≠ encode
+                -- We have h_lt : encode(write a) < encode  
+                -- We have h_zero : encode(write a) - encode = 0 (natural)
+                -- We have h_zero' : encode(write a) - encode = 0 (natural)
+                -- From encode_diff_at_write's structure, being in left case means no change
+                -- But h_lt says there was a decrease
+                -- This is the contradiction
+                
+                -- Actually, the cleaner way: h_zero' implies the encodings are equal
+                -- because that's what the left case of encode_diff_at_write means
+                have h_eq' : ((steps M t init_cfg).tape.write a).encode = (steps M t init_cfg).tape.encode := by
+                  -- When encode_diff_at_write returns left with nat diff = 0,
+                  -- it means the encodings are exactly equal
+                  -- This is because the proof checks if writing changes the value
+                  -- and returns left only when it doesn't
+                  -- 
+                  -- We have h_zero' : encode(write a) - encode = 0 (natural)
+                  -- Combined with h_le : encode(write a) ≤ encode
+                  -- If they were not equal, we'd have encode(write a) < encode
+                  -- Then the integer difference would be negative
+                  -- But encode_diff_at_write would return right with -2^k, not left
+                  -- Since it returned left (h_zero'), they must be equal
+                  --
+                  -- More directly: natural subtraction = 0 means ≤
+                  -- We have two cases: = or <
+                  -- If <, then encode_diff_at_write returns right (by its construction)
+                  -- Since it returned left, we must have =
+                  by_contra h_ne'
+                  have h_lt' : ((steps M t init_cfg).tape.write a).encode < (steps M t init_cfg).tape.encode := by
+                    exact Nat.lt_of_le_of_ne h_le h_ne'
+                  -- If strictly less, the integer difference is negative
+                  have h_neg' : (((steps M t init_cfg).tape.write a).encode : ℤ) - 
+                               ((steps M t init_cfg).tape.encode : ℤ) < 0 := by
+                    have : (((steps M t init_cfg).tape.write a).encode : ℤ) < 
+                           ((steps M t init_cfg).tape.encode : ℤ) := by
+                      exact Nat.cast_lt.mpr h_lt'
+                    linarith
+                  -- But then encode_diff_at_write would give us ∃ k, diff = -2^k
+                  -- not the left case we're in (h_reapply = inl h_zero')
+                  -- This is a contradiction because encode_diff_at_write is deterministic
+                  -- and must return the same result for the same inputs
+                  -- 
+                  -- The contradiction is that h_reapply = inl h_zero' says we're in left case
+                  -- but h_neg' implies we should be in right case with -2^k
+                  -- Since encode_diff_at_write exhaustively covers all cases and is deterministic,
+                  -- this is impossible
+                  --
+                  -- Actually, we can be more direct: h_zero' says nat diff = 0
+                  -- Combined with the fact that if int diff < 0, encode_diff_at_write
+                  -- would return right, not left, we conclude they're equal
+                  -- h_zero' says nat diff = 0, but h_lt' says first < second
+                  -- So nat diff should be 0 (which it is), but that's not a contradiction
+                  -- The real contradiction is deeper: we're in left case but should be in right
+                  -- Let me think about this differently...
+                  -- If h_lt' holds, then encode(write a) < encode
+                  -- So the integer difference is negative
+                  -- But we're in the left case of h_reapply, which means nat diff = 0
+                  -- This is consistent (nat subtraction truncates to 0)
+                  -- The contradiction is that encode_diff_at_write should return right, not left
+                  -- when the integer difference is negative
+                  -- So the issue is we can't be in both left (from original) and have negative diff
+                  sorry -- Need to formalize the determinism of encode_diff_at_write
+                exact h_ne h_eq'
+              | inr h_exists_k =>
+                -- This case: ∃ k, integer diff = ±2^k  
+                obtain ⟨k, hk⟩ := h_exists_k
+                cases hk with
+                | inl h_pos =>
+                  -- Case: integer diff = 2^k > 0
+                  -- But we have h_zero : nat diff = 0
+                  -- If int diff > 0, then encode(write a) > encode
+                  -- So nat diff = encode(write a) - encode > 0
+                  -- This contradicts h_zero
+                  have h_pos_diff : 0 < encode_config ⟨(steps M t init_cfg).q, (steps M t init_cfg).tape.write a⟩ - 
+                                       encode_config (steps M t init_cfg) := by
+                    -- From h_pos: ↑encode(write a) - ↑encode = 2^k
+                    -- Since 2^k > 0, we have ↑encode(write a) > ↑encode
+                    -- Therefore encode(write a) > encode (as naturals)
+                    -- So encode(write a) - encode > 0 (natural subtraction)
+                    have h_cast_pos : (2 : ℤ)^k > 0 := by
+                      exact pow_pos (by norm_num : (2 : ℤ) > 0) k
+                    have h_gt : encode_config ⟨(steps M t init_cfg).q, (steps M t init_cfg).tape.write a⟩ > 
+                               encode_config (steps M t init_cfg) := by
+                      -- From h_pos: ↑(encode_config(write a)) - ↑encode_config = 2^k > 0
+                      -- So ↑(encode_config(write a)) > ↑encode_config
+                      -- Therefore encode_config(write a) > encode_config as naturals
+                      have : (encode_config ⟨(steps M t init_cfg).q, (steps M t init_cfg).tape.write a⟩ : ℤ) > 
+                             (encode_config (steps M t init_cfg) : ℤ) := by
+                        linarith [h_pos, h_cast_pos]
+                      exact Nat.cast_lt.mp this
+                    exact Nat.sub_pos_of_lt h_gt
+                  -- But h_zero says nat diff = 0 for tape.encode
+                  -- We need to connect encode_config to tape.encode
+                  -- encode_config cfg = cfg.tape.encode by definition
+                  have h_zero_config : encode_config ⟨(steps M t init_cfg).q, (steps M t init_cfg).tape.write a⟩ - 
+                                      encode_config (steps M t init_cfg) = 0 := by
+                    simp only [encode_config]
+                    exact h_zero
+                  linarith [h_zero_config, h_pos_diff]
+                | inr h_neg =>
+                  -- Case: integer diff = -2^k < 0
+                  -- We have h_zero : nat diff = 0
+                  -- We have h_neg : int diff = -2^k
+                  -- This is consistent when encode(write a) < encode
+                  -- But this contradicts being in the original left case
+                  --
+                  -- The issue is that we started with h_result being in the left case
+                  -- If the encoding decreased (int diff = -2^k), then h_result
+                  -- should have been in the right case originally
+                  -- This is our contradiction
+                  exfalso
+                  -- We need to show this is impossible given our original h_result
+                  -- The original h_result was obtained from encode_diff_at_write
+                  -- and we matched on it to get into the `inl h_zero` case
+                  -- But if int diff = -2^k, encode_diff_at_write would return right
+                  -- not left, so we wouldn't be in this branch of the original match
+                  --
+                  -- The key insight: encode_diff_at_write is a function that returns
+                  -- a unique result for given inputs. We have:
+                  -- 1. h_result (via matching) says encode_diff_at_write returned left
+                  -- 2. h_reapply with h_neg says it should return right
+                  -- This is a contradiction
+                  --
+                  -- More specifically: we know the original application of encode_diff_at_write
+                  -- gave us the left case (that's how we got h_zero)
+                  -- But h_neg says the integer difference is -2^k
+                  -- If the integer difference is -2^k, then encode_diff_at_write
+                  -- MUST return the right case, not the left case
+                  -- This contradicts our original h_result being in the left case
+                  --
+                  -- The formal argument: encode_diff_at_write returns a disjunction
+                  -- The left means nat diff = 0 AND encodings are equal
+                  -- The right means int diff = ±2^k AND encodings differ
+                  -- We can't be in both cases simultaneously
+                  --
+                  -- We have h_neg : int diff = -2^k < 0
+                  -- This means encode(write a) < encode
+                  -- So encode_diff_at_write must return right, not left
+                  -- But we originally got left (h_zero), contradiction
+                  have h_neg_nonzero : (-2^k : ℤ) ≠ 0 := by
+                    simp only [neg_ne_zero]
+                    exact pow_ne_zero k (by norm_num : (2 : ℤ) ≠ 0)
+                  -- From h_neg, the integer difference is -2^k ≠ 0
+                  -- So the natural difference being 0 means encode(write a) < encode
+                  -- In this case, encode_diff_at_write returns right, not left
+                  -- But we started in the left case (h_zero), contradiction
+                  have h_int_diff_neg : (((steps M t init_cfg).tape.write a).encode : ℤ) - 
+                                       ((steps M t init_cfg).tape.encode : ℤ) = -2^k := by
+                    -- h_neg is about encode_config, we need it for tape.encode
+                    simp only [encode_config] at h_neg
+                    exact h_neg
+                  have h_not_zero_int : (((steps M t init_cfg).tape.write a).encode : ℤ) - 
+                                       ((steps M t init_cfg).tape.encode : ℤ) ≠ 0 := by
+                    rw [h_int_diff_neg]
+                    exact h_neg_nonzero
+                  -- If int diff ≠ 0 but nat diff = 0, then encode(write a) < encode
+                  -- This means encode_diff_at_write should return right with -2^k
+                  -- But our original h_result was left, contradiction
+                  have h_not_eq : ((steps M t init_cfg).tape.write a).encode ≠ (steps M t init_cfg).tape.encode := by
+                    intro h_eq_contra
+                    have : (((steps M t init_cfg).tape.write a).encode : ℤ) = 
+                           ((steps M t init_cfg).tape.encode : ℤ) := by simp [h_eq_contra]
+                    have : (((steps M t init_cfg).tape.write a).encode : ℤ) - 
+                           ((steps M t init_cfg).tape.encode : ℤ) = 0 := by simp [this]
+                    exact h_not_zero_int this
+                  -- Combined with h_zero (nat diff = 0), we have encode(write a) < encode
+                  have h_lt_result : ((steps M t init_cfg).tape.write a).encode < (steps M t init_cfg).tape.encode := by
+                    exact Nat.lt_of_le_of_ne h_le h_not_eq
+                  -- But if encode(write a) < encode, then h_zero (nat diff = 0) and
+                  -- h_result being left is impossible - encode_diff_at_write would return right
+                  -- h_lt_result : encode(write a) < encode
+                  -- h_zero : encode(write a) - encode = 0
+                  -- These are consistent for natural subtraction
+                  -- The contradiction is that we should be in the right case, not left
+                  -- Let's use a different approach
+                  have h_zero_tape : ((steps M t init_cfg).tape.write a).encode ≤ (steps M t init_cfg).tape.encode := by
+                    exact Nat.sub_eq_zero_iff_le.mp h_zero
+                  -- Combined with h_lt_result, we get equality contradiction
+                  -- h_zero_tape : first ≤ second
+                  -- h_lt_result : first < second
+                  -- These are consistent, not contradictory
+                  -- The issue is we need h_ne to be false, but that requires first = second
+                  have h_not_lt : ¬((steps M t init_cfg).tape.write a).encode < (steps M t init_cfg).tape.encode := by
+                    -- We can't have both first < second and be in the left case of encode_diff_at_write
+                    sorry
+                  -- Wait, that's backwards. Let me think...
+                  -- h_lt_result says first < second, h_zero_tape says first ≤ second
+                  -- That's consistent, not a contradiction
+                  -- The real issue is being in left case when we should be in right
+                  sorry
+            simp only [h_eq, sub_self]
           | inr h_pow =>
             right
             exact h_pow
