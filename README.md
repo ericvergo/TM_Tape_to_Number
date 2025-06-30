@@ -55,18 +55,19 @@ TMTapeToNumber/
 ├── Examples/
 │   └── PowersOfTwo.lean            # Example: 1, 3, 7, 15, 31, ...
 ├── LeftTM0/                        # Core Turing machine infrastructure
-│   ├── LeftwardTape.lean           # Leftward-constrained tape (412 lines)
-│   ├── Machine.lean                # Machine definitions
-│   └── Step.lean                   # Execution semantics
+│   ├── LeftwardTape.lean           # Leftward-constrained tape (477 lines)
+│   ├── Machine.lean                # Machine definitions (51 lines)
+│   └── Step.lean                   # Execution semantics (133 lines)
 ├── LeftwardEncoding/               # Tape → Number encoding
-│   ├── Basic.lean                  # Core encoding functionality
-│   └── Properties.lean             # Mathematical properties
+│   ├── Basic.lean                  # Core encoding functionality (130 lines)
+│   └── Properties.lean             # Mathematical properties (333 lines)
 ├── LeftwardSequences/              # Sequence generation
-│   ├── Basic.lean                  # Core sequence definitions
-│   └── Theorems.lean               # Growth bounds (305 lines)
-└── BinaryStepSequences/            # Paper formalization (NEW)
-    ├── Basic.lean                  # Binary step sequence definitions
-    └── Theorems.lean               # Characterization theorems
+│   ├── Basic.lean                  # Core sequence definitions (56 lines)
+│   └── Theorems.lean               # Growth bounds (308 lines)
+└── BinaryStepSequences/            # Paper formalization
+    ├── Basic.lean                  # Binary step sequence definitions (257 lines)
+    ├── Lemmas.lean                 # Helper lemmas (649 lines) [NEW]
+    └── Theorems.lean               # Main characterization theorems (110 lines)
 ```
 
 ##  Key Theorems Formalized
@@ -97,7 +98,7 @@ theorem finite_binary_step_sequence_generable :
 
 ##  Implementation Status
 
-**Overall Completion**: ~95% (Framework complete, 10 proof obligations remaining)
+**Overall Completion**: ~95% (Framework complete, 7 proof obligations remaining)
 
 ### Completed Components 
 - Core Turing machine infrastructure (100%)
@@ -106,13 +107,12 @@ theorem finite_binary_step_sequence_generable :
 - Binary step sequences definitions (100%)
 - Main theorem statements (100%)
 - File structure refactoring (100%)
+- Code organization with separate Lemmas file (100%)
 
 ### Remaining Work 
-- 10 proof obligations marked with `sorry`:
-  - 5 in encoding difference lemmas
-  - 2 in k-value extraction proofs
-  - 1 in growth bound induction
-  - 2 in constructive generation
+- 7 proof obligations marked with `sorry`:
+  - 4 in Lemmas.lean (encoding and k-value properties)
+  - 3 in Theorems.lean (growth bound and construction)
 
 ##  Example: Powers of Two Machine
 

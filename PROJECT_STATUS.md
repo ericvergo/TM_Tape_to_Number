@@ -1,11 +1,12 @@
 # TM Tape to Number: Project Status & Roadmap
 
-**Date:** December 2024 (Updated)  
+**Date:** January 2025 (Updated)  
 **Status:** 🚀 **Phase 3 Advanced - Core Encoding Theory Complete**  
 **Build Status:** ✅ **Project builds successfully with no errors!**  
 **Architecture:** ✅ **Binary step sequences framework fully operational**  
 **Blueprint:** 🌐 **Interactive dependency graph now available!**  
-**MCP Integration:** ✅ **lean-lsp MCP tools integrated for enhanced proof development**
+**MCP Integration:** ✅ **lean-lsp MCP tools integrated for enhanced proof development**  
+**Code Organization:** ✅ **Major refactoring complete - files split for better maintainability**
 
 ---
 
@@ -40,18 +41,19 @@ TMTapeToNumber/
 ├── Examples/
 │   └── PowersOfTwo.lean            # Example: 1, 3, 7, 15, 31, ...
 ├── LeftTM0/                        # Core Turing machine infrastructure
-│   ├── LeftwardTape.lean           # Leftward tape ✅ (no sorries)
-│   ├── Machine.lean                # Machine definitions ✅
-│   └── Step.lean                   # Execution semantics ✅
+│   ├── LeftwardTape.lean           # Leftward tape (477 lines) ✅ (no sorries)
+│   ├── Machine.lean                # Machine definitions (51 lines) ✅
+│   └── Step.lean                   # Execution semantics (133 lines) ✅
 ├── LeftwardEncoding/               # Tape → Number encoding
-│   ├── Basic.lean                  # Core encoding ✅
-│   └── Properties.lean             # Encoding properties ✅
+│   ├── Basic.lean                  # Core encoding (130 lines) ✅
+│   └── Properties.lean             # Encoding properties (333 lines) ✅
 ├── LeftwardSequences/              # Sequence generation
 │   ├── Basic.lean                  # Sequence definitions (56 lines) ✅
-│   └── Theorems.lean               # Growth bounds (305 lines) ✅
+│   └── Theorems.lean               # Growth bounds (308 lines) ✅
 └── BinaryStepSequences/            # Paper formalization
-    ├── Basic.lean                  # Definitions ✅ (no sorries)
-    └── Theorems.lean               # Main theorems ⚠️ (8 sorries)
+    ├── Basic.lean                  # Definitions (257 lines) ✅ (no sorries)
+    ├── Lemmas.lean                 # Helper lemmas (649 lines) ⚠️ (4 sorries) [NEW]
+    └── Theorems.lean               # Main theorems (110 lines) ⚠️ (3 sorries) [REFACTORED]
 ```
 
 ## 🌐 **Interactive Blueprint**
@@ -88,22 +90,25 @@ TMTapeToNumber/
 - `encode_diff_at_write`: Proves that writing changes encoding by 0 or ±2^k - **COMPLETE**
 
 ### **Proofs in Progress** 🔧
-Total `sorry` count: **7** (down from 13 → 8 → 7)
+Total `sorry` count: **7** (unchanged after refactoring)
 
-1. **Theorems.lean** (7 sorries)
-   - `sequence_diff_is_power_of_two`: Cast issue in "= 0" case (line 473)
-   - `sequence_k_equals_position`: Two sorries for connecting to encode_diff_at_write (lines 494, 505)
-   - `sequence_k_bound`: Proves k ≤ t using head position bounds (line 529)
-   - `sequence_k_movement_constraint`: Shows |k_j - k_i| ≤ j - i (line 554)
-   - `binary_step_sequence_growth_bound`: Inductive proof of 2^(t+1) bound (line 605)
-   - `construct_tm_for_sequence`: Algorithm to build TM from k-values (line 645)
-   - `finite_binary_step_sequence_generable`: Existence proof via construction (line 650)
+1. **Lemmas.lean** (4 sorries) [NEW FILE]
+   - `encode_diff_at_write`: Cast issue in "= 0" case (line 476)
+   - `sequence_k_equals_position`: Connect k to absolute position (line 520)
+   - `sequence_k_bound`: Proves k ≤ t using head position bounds (line 577)
+   - `sequence_k_movement_constraint`: Shows |k_j - k_i| ≤ j - i (line 646)
+
+2. **Theorems.lean** (3 sorries) [REFACTORED]
+   - `binary_step_sequence_growth_bound`: Inductive proof of 2^(t+1) bound (line 76)
+   - `construct_tm_for_sequence`: Algorithm to build TM from k-values (line 99)
+   - `finite_binary_step_sequence_generable`: Existence proof via construction (line 108)
 
 ### **Build Status** ✅
 ```bash
 lake build TMTapeToNumber.LeftTM0.LeftwardTape        # ✅ Builds (no sorries)
 lake build TMTapeToNumber.BinaryStepSequences.Basic   # ✅ Builds (no sorries)  
-lake build TMTapeToNumber.BinaryStepSequences.Theorems # ✅ Builds (8 sorries)
+lake build TMTapeToNumber.BinaryStepSequences.Lemmas  # ✅ Builds (4 sorries)
+lake build TMTapeToNumber.BinaryStepSequences.Theorems # ✅ Builds (3 sorries)
 lake build                                           # ✅ Full project builds successfully
 lake build TMTapeToNumber:docs                        # ✅ Documentation builds
 leanblueprint web                                     # ✅ Blueprint generates
@@ -138,6 +143,8 @@ leanblueprint web                                     # ✅ Blueprint generates
 - ✅ Automated tooling for documentation and updates
 - ✅ MCP integration for real-time proof development
 - ✅ Enhanced CLAUDE.md with MCP-powered workflows
+- ✅ **NEW**: Clean file organization with separate Lemmas and Theorems files
+- ✅ **NEW**: No code duplication across modules
 
 ### **Future Work** 🚀
 - Complete remaining proofs to achieve 100% formalization
