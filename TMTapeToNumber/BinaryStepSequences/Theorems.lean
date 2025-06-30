@@ -1,11 +1,16 @@
 import TMTapeToNumber.BinaryStepSequences.Basic
 import TMTapeToNumber.LeftwardSequences.Theorems
 import TMTapeToNumber.LeftTM0.LeftwardTape
+import TMTapeToNumber.LeftTM0.Step
+import TMTapeToNumber.LeftwardEncoding.Properties
 import Mathlib.Data.Nat.Log
+
+set_option linter.unusedSectionVars false
 
 namespace LeftTM0
 
 open LeftTM0.Theorems
+open Turing
 
 variable {Λ : Type*} [Inhabited Λ]
 
@@ -79,48 +84,48 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       have h_a_false : a = false := by
         cases a with
         | false => rfl
-        | true => 
+        | true =>
           -- If a = true, then h_new says ¬a = true, i.e., ¬true = true
           -- This is False
           exfalso
           exact h_new rfl
-      
+
       -- The key insight: encoding sums 2^|pos| for all positions ≤ 0 with true
       -- Writing false at head position removes that contribution
-      
+
       -- Unfold the encoding definitions
       simp only [encode_config, LeftwardTape.encode, LeftwardTape.write]
-      
+
       -- The encoding changes by removing the contribution from the head position
       -- First, let's establish that the head is at absolute position cfg.tape.head_pos
       -- and since head_pos ≤ 0, we have |head_pos| = -head_pos
-      
+
       -- The new tape has false at head position, old tape has true
       -- So true_positions_absolute of new tape = old tape's true_positions \ {cfg.tape.head_pos}
-      
+
       -- Need to show the difference is -2^(-cfg.tape.head_pos)
       have h_head_pos_nonpos : cfg.tape.head_pos ≤ 0 := cfg.tape.head_nonpos
-      
+
       -- The key insight: writing false at position 0 (relative) removes cfg.tape.head_pos from true_positions
       -- because nth_absolute cfg.tape.head_pos = nth 0 = current_val = true (old)
       -- and after writing false, nth_absolute cfg.tape.head_pos = false (new)
-      
+
       -- Step 1: The old tape has true at absolute position cfg.tape.head_pos
       have h_old_true : cfg.tape.nth_absolute cfg.tape.head_pos = true := by
         simp only [nth_absolute, sub_self]
         -- nth_absolute head_pos = nth (head_pos - head_pos) = nth 0
         -- and current_val = cfg.tape.nth 0 = true
         exact h_current
-      
+
       -- Step 2: The new tape has false at absolute position cfg.tape.head_pos
       have h_new_false : (cfg.tape.write a).nth_absolute cfg.tape.head_pos = false := by
         simp only [nth_absolute, write, sub_self]
         rw [Turing.Tape.write_nth]
         simp only [if_pos rfl]
         exact h_a_false
-      
+
       -- Step 3: Other positions are unchanged by write
-      have h_unchanged : ∀ i ≠ cfg.tape.head_pos, 
+      have h_unchanged : ∀ i ≠ cfg.tape.head_pos,
         (cfg.tape.write a).nth_absolute i = cfg.tape.nth_absolute i := by
         intro i hi
         simp only [nth_absolute, write]
@@ -130,12 +135,12 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
           have : i = cfg.tape.head_pos := by linarith
           contradiction
         · rfl
-      
+
       -- Step 4: Show that true_positions differ only at cfg.tape.head_pos
-      have h_diff : (cfg.tape.write a).true_positions_absolute = 
+      have h_diff : (cfg.tape.write a).true_positions_absolute =
                     cfg.tape.true_positions_absolute \ {cfg.tape.head_pos} := by
         ext i
-        simp only [true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset, 
+        simp only [true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset,
                    Finset.mem_sdiff, Finset.mem_singleton]
         constructor
         · intro ⟨hi_mem, hi_le, hi_true⟩
@@ -168,32 +173,32 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
             exact hi_mem
           · rw [h_unchanged i hi_neq]
             exact hi_true
-      
+
       -- Step 5: Calculate the encoding difference
       -- The encoding of the new tape structure
-      have h_new_encode : (⟨Turing.Tape.write a cfg.tape.tape, 
+      have h_new_encode : (⟨Turing.Tape.write a cfg.tape.tape,
                            cfg.tape.head_pos,
-                           cfg.tape.head_nonpos⟩ : LeftwardTape Bool).true_positions_absolute = 
+                           cfg.tape.head_nonpos⟩ : LeftwardTape Bool).true_positions_absolute =
                           (cfg.tape.write a).true_positions_absolute := by
         -- Both are the same tape structure
         rfl
-      
+
       -- Rewrite the goal using this equality
       rw [h_new_encode, h_diff]
-      
+
       -- The sum over A \ {x} = sum over A - (if x ∈ A then 2^f(x) else 0)
       have h_in : cfg.tape.head_pos ∈ cfg.tape.true_positions_absolute := by
         simp only [true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset]
         refine ⟨?_, h_head_pos_nonpos, h_old_true⟩
         simp only [Set.mem_setOf, has_content_at_absolute, h_old_true]
         trivial
-      
+
       -- Use the formula: sum(A) = sum(A\{x}) + sum({x}) when x ∈ A
       have h_sum_eq : (∑ i ∈ cfg.tape.true_positions_absolute, 2 ^ (-i).natAbs) =
                       (∑ i ∈ cfg.tape.true_positions_absolute \ {cfg.tape.head_pos}, 2 ^ (-i).natAbs) +
                       (∑ i ∈ ({cfg.tape.head_pos} : Finset ℤ), 2 ^ (-i).natAbs) := by
         rw [← Finset.sum_sdiff (Finset.singleton_subset_iff.mpr h_in)]
-      
+
       rw [h_sum_eq]
       simp only [Finset.sum_singleton]
       -- Now we have: sum(A\{x}) - (sum(A\{x}) + 2^|x|) = -2^|x|
@@ -209,40 +214,40 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       -- The encoding increases by 2^|head_pos|
       -- The key insight: encoding sums 2^|pos| for all positions ≤ 0 with true
       -- Writing true at head position adds that contribution
-      
+
       -- Similar to the previous case, but now we're adding instead of removing
       have h_current_false : current_val = false := by
         cases h_current_eq : current_val with
         | false => rfl
-        | true => 
+        | true =>
           -- In this case branch, current_val = true (from h_current_eq)
           -- But h_current says ¬current_val = true, i.e., ¬true = true
           -- This is a contradiction
           exfalso
           rw [h_current_eq] at h_current
           exact h_current rfl
-      
+
       have h_a_true : a = true := by
         cases a with
-        | false => 
+        | false =>
           -- If a = false, then h_new : a = true says false = true
           -- This is impossible
           exact absurd h_new (Bool.false_ne_true)
         | true => rfl
-      
+
       -- The old tape has false at head position, new tape has true
       have h_old_false : cfg.tape.nth_absolute cfg.tape.head_pos = false := by
         simp only [nth_absolute, sub_self]
         exact h_current_false
-      
+
       have h_new_true : (cfg.tape.write a).nth_absolute cfg.tape.head_pos = true := by
         simp only [nth_absolute, write, sub_self]
         rw [Turing.Tape.write_nth]
         simp only [if_pos rfl]
         exact h_a_true
-      
+
       -- Other positions unchanged (same as before)
-      have h_unchanged : ∀ i ≠ cfg.tape.head_pos, 
+      have h_unchanged : ∀ i ≠ cfg.tape.head_pos,
         (cfg.tape.write a).nth_absolute i = cfg.tape.nth_absolute i := by
         intro i hi
         simp only [nth_absolute, write]
@@ -251,12 +256,12 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
         · have : i = cfg.tape.head_pos := by linarith
           contradiction
         · rfl
-      
+
       -- Show that true_positions differ only by adding cfg.tape.head_pos
-      have h_diff : (cfg.tape.write a).true_positions_absolute = 
+      have h_diff : (cfg.tape.write a).true_positions_absolute =
                     cfg.tape.true_positions_absolute ∪ {cfg.tape.head_pos} := by
         ext i
-        simp only [true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset, 
+        simp only [true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset,
                    Finset.mem_union, Finset.mem_singleton]
         constructor
         · intro ⟨hi_mem, hi_le, hi_true⟩
@@ -301,19 +306,19 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
             refine ⟨?_, cfg.tape.head_nonpos, h_new_true⟩
             simp only [Set.mem_setOf, has_content_at_absolute, h_new_true]
             trivial
-      
+
       -- Calculate the encoding difference
-      have h_new_encode : (⟨Turing.Tape.write a cfg.tape.tape, 
+      have h_new_encode : (⟨Turing.Tape.write a cfg.tape.tape,
                            cfg.tape.head_pos,
-                           cfg.tape.head_nonpos⟩ : LeftwardTape Bool).true_positions_absolute = 
+                           cfg.tape.head_nonpos⟩ : LeftwardTape Bool).true_positions_absolute =
                           (cfg.tape.write a).true_positions_absolute := by
         rfl
-      
+
       -- First unfold the encoding
       simp only [encode_config, LeftwardTape.encode]
       -- Now we can use h_diff to rewrite the LHS
       rw [h_diff]
-      
+
       -- Show head_pos is not in the old true_positions (since it has false)
       have h_not_in : cfg.tape.head_pos ∉ cfg.tape.true_positions_absolute := by
         simp only [true_positions_absolute, Finset.mem_filter, Set.Finite.mem_toFinset]
@@ -323,20 +328,20 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
         -- We have h_old_false : cfg.tape.nth_absolute cfg.tape.head_pos = false
         rw [h_old_false]
         simp
-      
+
       -- Use the formula: sum(A ∪ {x}) = sum(A) + sum({x}) when x ∉ A
       have h_sum_eq : (∑ i ∈ cfg.tape.true_positions_absolute ∪ {cfg.tape.head_pos}, 2 ^ (-i).natAbs) =
                       (∑ i ∈ cfg.tape.true_positions_absolute, 2 ^ (-i).natAbs) +
                       (∑ i ∈ ({cfg.tape.head_pos} : Finset ℤ), 2 ^ (-i).natAbs) := by
         rw [Finset.sum_union]
         exact Finset.disjoint_singleton_right.mpr h_not_in
-      
+
       rw [h_sum_eq]
       simp only [Finset.sum_singleton]
       -- Now we have: (sum(A) + 2^|x|) - sum(A) = 2^|x|
       -- This is basic arithmetic: (a + b) - a = b
-      -- TODO: Fix this arithmetic
-      sorry
+      push_cast
+      ring
     · -- Writing false over false: no change
       left
       -- Show encoding doesn't change
@@ -348,7 +353,7 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       have h_current_false : current_val = false := by
         cases h_current_eq : current_val with
         | false => rfl
-        | true => 
+        | true =>
           -- In this case branch, current_val = true (from h_current_eq)
           -- But h_current says ¬current_val = true, i.e., ¬true = true
           -- This is a contradiction
@@ -358,7 +363,7 @@ lemma encode_diff_at_write (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
       have h_a_false : a = false := by
         cases a with
         | false => rfl
-        | true => 
+        | true =>
           -- If a = true, then h_new says ¬a = true, i.e., ¬true = true
           -- This is False
           exfalso
@@ -395,13 +400,83 @@ lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool �
   -- The key insight: one step either moves (no encoding change) or writes (±2^k change)
   -- We need to analyze the transition at step t
 
-  sorry -- TODO: Complete proof by case analysis
-  -- Key steps:
-  -- 1. steps M (t + 1) init_cfg = step_or_stay M (steps M t init_cfg)
-  -- 2. If step returns none, then encoding doesn't change (difference is 0)
-  -- 3. If step returns some cfg', analyze the transition:
-  --    - If it's a move, encoding doesn't change (use encoding preservation lemma)
-  --    - If it's a write, use encode_diff_at_write lemma
+  -- Use the fact that steps (t + 1) = step_or_stay M (steps t)
+  have h_step : steps M (t + 1) init_cfg = step_or_stay M (steps M t init_cfg) := by
+    simp only [steps]
+    rw [Function.iterate_succ_apply']
+
+  rw [h_step]
+
+  -- Case analysis on what step does
+  let cfg_t := steps M t init_cfg
+  unfold step_or_stay
+
+  match h_step_result : step M cfg_t with
+  | none =>
+    -- Machine halted, config stays the same
+    left
+    simp [h_step_result]
+  | some cfg' =>
+    -- Machine took a step
+    -- Now analyze what kind of step it was
+    unfold step at h_step_result
+    split_ifs at h_step_result with h_constraint
+    · -- Step preserves constraint
+      match h_machine : M cfg_t.q cfg_t.tape.read with
+      | none =>
+        -- Machine halts, contradiction
+        simp [h_machine] at h_step_result
+      | some (q', stmt) =>
+        -- h_step_result says cfg' = ⟨q', apply_stmt stmt cfg_t.tape⟩
+        simp [h_machine] at h_step_result
+        -- h_step_result : { q := q', tape := step.apply_stmt stmt cfg_t.tape } = cfg'
+        have h_cfg' : cfg' = ⟨q', step.apply_stmt stmt cfg_t.tape⟩ := by
+          rw [← h_step_result]
+
+        -- First simplify the goal to work with cfg'
+        simp [h_step_result]
+        rw [h_cfg']
+
+        -- Case analysis on the statement
+        cases stmt with
+        | move dir =>
+          -- Moving doesn't change encoding
+          left
+          simp only [step.apply_stmt, encode_config]
+          cases dir with
+          | left =>
+            rw [encode_move_left]
+            ring
+          | right =>
+            have h_move_right := encode_move_invariant cfg_t.tape
+            rw [h_move_right.2]
+            ring
+        | write a =>
+          -- Writing can change encoding by ±2^k
+          simp only [step.apply_stmt, encode_config]
+          -- cfg_t = steps M t init_cfg by definition
+          have : cfg_t = steps M t init_cfg := by rfl
+          rw [this]
+          -- Apply encode_diff_at_write
+          have h_exists : ∃ b, ({ q := (steps M t init_cfg).q, tape := (steps M t init_cfg).tape.write a } : Cfg Bool Λ) =
+                              { q := (steps M t init_cfg).q, tape := (steps M t init_cfg).tape.write b } := by
+            use a
+          have h_result := encode_diff_at_write (steps M t init_cfg)
+                                              ({ q := (steps M t init_cfg).q, tape := (steps M t init_cfg).tape.write a } : Cfg Bool Λ)
+                                              h_exists
+          -- Convert from encode_config to just tape.encode
+          simp only [encode_config] at h_result
+          -- Cast the natural numbers to integers
+          cases h_result with
+          | inl h_zero =>
+            left
+            -- The "left" case from encode_diff_at_write occurs when writing doesn't change encoding
+            -- TODO: prove that Nat subtraction = 0 implies Int subtraction = 0 in this context
+            sorry
+          | inr h_pow =>
+            right
+            exact h_pow
+
 
 /-- The k value in a sequence change equals the absolute position where the write occurred -/
 lemma sequence_k_equals_position (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ)
@@ -409,15 +484,38 @@ lemma sequence_k_equals_position (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) 
     ∃ k : ℕ, (sequence_difference (sequence M init_cfg) t = 2^k ∨
               sequence_difference (sequence M init_cfg) t = -(2^k : ℤ)) ∧
               k = Int.natAbs (-(steps M t init_cfg).tape.head_pos) := by
-  -- Since the sequence changed, the machine must have written at step t
-  -- The change is at the head position, which is an absolute position
-  -- The encoding formula uses 2^|position| for each true position
-  sorry -- TODO: Complete proof
-  -- Key steps:
-  -- 1. h_change implies a write occurred (not just a move)
-  -- 2. The write is at head_pos
-  -- 3. Since head_pos ≤ 0, |head_pos| = -head_pos
-  -- 4. The encoding change is ±2^(-head_pos)
+  -- First, use sequence_diff_is_power_of_two to get that the difference is 0 or ±2^k
+  have h_diff := sequence_diff_is_power_of_two M init_cfg t
+
+  -- h_change means the difference is not 0
+  unfold sequence_difference at ⊢
+  unfold sequence at h_change
+  have h_not_zero : encode_config (steps M (t + 1) init_cfg) ≠ encode_config (steps M t init_cfg) := by
+    intro h_eq
+    apply h_change
+    sorry
+
+  -- So the difference must be ±2^k for some k
+  cases h_diff with
+  | inl h_zero =>
+    -- If difference is 0, then sequences are equal, contradicting h_change
+    exfalso
+    unfold sequence_difference at h_zero
+    have h_eq : encode_config (steps M (t + 1) init_cfg) = encode_config (steps M t init_cfg) := by
+      -- h_zero says the Int difference is 0
+      have : (encode_config (steps M (t + 1) init_cfg) : ℤ) = (encode_config (steps M t init_cfg) : ℤ) := by
+        sorry
+      exact Nat.cast_injective this
+    exact h_not_zero h_eq
+  | inr h_exists =>
+    obtain ⟨k, h_pow⟩ := h_exists
+    use k
+    constructor
+    · exact h_pow
+    · -- Now we need to show k = |-(steps M t init_cfg).tape.head_pos|
+      -- Since a write occurred at the head position, and encode_diff_at_write tells us
+      -- the change is ±2^k where k is the absolute position
+      sorry  -- TODO: Connect to encode_diff_at_write and extract position
 
 /-- The k value is bounded by the step number -/
 lemma sequence_k_bound (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ)

@@ -22,6 +22,9 @@ BEHAVIORS TO EMBODY
 - Address errors systematically, one at a time using MCP diagnostics
 - Use `have` statements liberally to break down complex goals
 - Only run full builds (`lake build`) when finalizing changes or if MCP tools are insufficient
+- When user says "we are spinning", immediately add a `sorry` and move to the next proof
+- Clean up all build errors before diving into proof details - a building codebase is better than a partially proven one
+- Use TodoWrite/TodoRead tools extensively to track progress and prioritize work
 
 BEHAVIORS TO AVOID
 - Don't replace a sorry with another sorry and consider it making progress
@@ -31,6 +34,14 @@ BEHAVIORS TO AVOID
 - Trying to fix multiple errors at once without understanding each one
 - Overusing rate-limited search tools - respect the 3 requests per 30 seconds limit
 - Running full builds when MCP tools can provide immediate feedback
+- Getting stuck on trivial arithmetic when the user wants progress
+- Spending too long on one proof - use sorry and move on when stuck
+
+PROOF PRIORITY ORDER
+1. First priority: Get everything to build (add sorries as needed)
+2. Second priority: Complete proofs that unblock other proofs
+3. Third priority: Fill in arithmetic/casting details
+4. Low priority: Optimize or beautify existing proofs
 
 MCP-POWERED PROOF WORKFLOW
 When proving theorems with sorries:
@@ -137,6 +148,9 @@ TYPE CONVERSION AND CASTING
 - Use Nat.cast_le.mp to convert (a : ℤ) ≤ (b : ℤ) to a ≤ b for naturals
 - When proving equalities between natural numbers via their casts, use Nat.cast_injective
 - Be careful with Int.toNat vs Int.natAbs - they behave differently on negative numbers
+- Natural number subtraction (a - b) is 0 when a < b, different from integer subtraction
+- When dealing with Nat/Int conversions in goals, `push_cast` is often helpful
+- `omega` is powerful for arithmetic but sometimes fails - have `linarith` as backup
 
 REWRITING TACTICS
 - When `rw` fails with "did not find instance of the pattern", check:
@@ -170,6 +184,13 @@ DEBUGGING ERRORS WITH MCP
 - When seeing "unsolved goals", use `lean_goal` to check all branches
 - Pay attention to whether you're inside a tactic block or term mode
 - Use `by exact` instead of just providing a term when Lean expects a tactic
+
+PATTERN MATCHING AND CASE ANALYSIS
+- In tactic mode, use `cases h with | inl h1 => ... | inr h2 => ...` not `match`
+- For existentials in `cases`, use `obtain ⟨var1, var2⟩ := h` to extract components
+- When matching on TM0.Stmt, remember to handle all cases (move left/right, write)
+- `unfold` at hypotheses sometimes fails - try unfolding only at the goal `⊢`
+- For structure updates, use `{ cfg with field := value }` syntax carefully
 
 PROOF ARCHITECTURE
 - Extract commonly needed facts as separate lemmas
@@ -280,5 +301,28 @@ lean_declaration_file(file_path, "Nat.add_comm")
 lean_file_contents(declaration_file_path)
 ```
 
+
+PROJECT-SPECIFIC INSIGHTS FOR TM_Tape_to_Number
+
+ENCODING PROOFS
+- The key lemma `encode_diff_at_write` shows writing changes encoding by 0 or ±2^k
+- When proving encoding changes, remember encoding only depends on tape, not machine state
+- The "= 0" case in `encode_diff_at_write` uses Nat subtraction, other cases use Int
+- `encode_move_left` and `encode_move_invariant` prove moves don't change encoding
+- Function.iterate_succ_apply' connects steps(t+1) to step_or_stay(steps(t))
+
+COMMON GOTCHAS IN THIS PROJECT
+- `encode_config` just extracts `cfg.tape.encode` - don't overthink it
+- Head position is always ≤ 0 in LeftwardTape, so |-head_pos| = -head_pos  
+- When a proof gets stuck on Nat vs Int arithmetic, consider if you're in wrong case
+- The linter warning about unused Inhabited instance can be silenced with `set_option`
+- Match expressions in term mode vs cases in tactic mode have different syntax
+
+PROOF STRATEGY FOR REMAINING SORRIES
+1. For cast issues: Understand which case of encode_diff_at_write you're in
+2. For k value proofs: Connect to the head position where write occurred
+3. For bounds: Use existing head_pos_bound lemmas from LeftwardSequences
+4. For growth bounds: Induction with careful arithmetic on powers of 2
+5. For TM construction: Build states that write at specific positions
 
 Remember: MCP tools give instant feedback without the overhead of full compilation, making the proof development cycle much faster!

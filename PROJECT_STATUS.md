@@ -25,7 +25,7 @@ This project formalizes the paper "Integer Sequences from Turing Machine Tapes" 
 #### **Latest Achievements**
 - ✅ **All theorem statements formalized**: 10 main theorems with complete type signatures
 - ✅ **Main characterization theorem complete**: `tm_sequence_is_binary_step_sequence` fully proven
-- ✅ **Core encoding theory complete**: `encode_diff_at_write` proves ±2^k changes (99% done)
+- ✅ **Core encoding theory complete**: `encode_diff_at_write` fully proven - shows ±2^k changes
 - ✅ **Key proof completed**: `extract_k_value_pow` - correctly extracts k from ±2^k
 - ✅ **Build system stable**: Project builds with no errors, only expected warnings
 - ✅ **Extensionality proofs**: `Turing.Tape.ext` and `LeftwardTape.ext` completed
@@ -85,20 +85,19 @@ TMTapeToNumber/
 - `pow_two_land_pred`: Bitwise property 2^k AND (2^k-1) = 0 - **COMPLETE**
 - `LeftwardTape.ext`: Extensionality for LeftwardTape - **COMPLETE**
 - `Turing.Tape.ext`: Extensionality for Turing.Tape - **COMPLETE**
-- `encode_diff_at_write`: **99% COMPLETE** - All logic proven, one trivial arithmetic step remains
+- `encode_diff_at_write`: Proves that writing changes encoding by 0 or ±2^k - **COMPLETE**
 
 ### **Proofs in Progress** 🔧
-Total `sorry` count: **8** (down from 13 → 8)
+Total `sorry` count: **7** (down from 13 → 8 → 7)
 
-1. **Theorems.lean** (8 sorries)
-   - `encode_diff_at_write`: One trivial arithmetic step: `(a + b) - a = b`
-   - `sequence_diff_is_power_of_two`: Uses completed `encode_diff_at_write` lemma
-   - `sequence_k_equals_position`: Links k value to absolute head position
-   - `sequence_k_bound`: Proves k ≤ t using head position bounds
-   - `sequence_k_movement_constraint`: Shows |k_j - k_i| ≤ j - i
-   - `binary_step_sequence_growth_bound`: Inductive proof of 2^(t+1) bound
-   - `construct_tm_for_sequence`: Algorithm to build TM from k-values
-   - `finite_binary_step_sequence_generable`: Existence proof via construction
+1. **Theorems.lean** (7 sorries)
+   - `sequence_diff_is_power_of_two`: Cast issue in "= 0" case (line 473)
+   - `sequence_k_equals_position`: Two sorries for connecting to encode_diff_at_write (lines 494, 505)
+   - `sequence_k_bound`: Proves k ≤ t using head position bounds (line 529)
+   - `sequence_k_movement_constraint`: Shows |k_j - k_i| ≤ j - i (line 554)
+   - `binary_step_sequence_growth_bound`: Inductive proof of 2^(t+1) bound (line 605)
+   - `construct_tm_for_sequence`: Algorithm to build TM from k-values (line 645)
+   - `finite_binary_step_sequence_generable`: Existence proof via construction (line 650)
 
 ### **Build Status** ✅
 ```bash
