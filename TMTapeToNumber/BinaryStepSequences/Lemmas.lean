@@ -691,27 +691,21 @@ lemma encode_diff_at_write_eq_of_zero (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
         have h_le_from_zero : (cfg.tape.write a).encode ≤ cfg.tape.encode := by
           simp only [encode_config] at h_zero'
           exact Nat.sub_eq_zero_iff_le.mp h_zero'
-        have h_eq : (cfg.tape.write a).encode = cfg.tape.encode := by
-          exfalso
+        -- We have h_strict_decrease: new < old, but h_zero': new - old = 0 (nat sub)
+        -- This is a fundamental contradiction in the proof structure
+        -- If we're writing false over true, we should get -2^k, not 0 difference
+        have h_le : (cfg.tape.write a).encode ≤ cfg.tape.encode := by
           simp only [encode_config] at h_zero'
-          -- h_zero' : (cfg.tape.write a).encode - cfg.tape.encode = 0
-          -- This means (cfg.tape.write a).encode ≤ cfg.tape.encode
-          have h_le : (cfg.tape.write a).encode ≤ cfg.tape.encode := by
-            exact Nat.sub_eq_zero_iff_le.mp h_zero'
-          have h_pos : cfg.tape.encode - (cfg.tape.write a).encode > 0 := by
-            exact Nat.sub_pos_of_lt h_strict_decrease
-          rw [Nat.sub_eq_zero_iff_le] at h_zero'
-
-          have h_no_change : (cfg.tape.write a).encode = cfg.tape.encode := by
-            -- This should follow from being in the "left" case of encode_diff_at_write
-            -- But this is what we need to prove/derive from h_zero
-            sorry
-          exact ne_of_lt h_strict_decrease h_no_change
-        -- Now we have h_strict_decrease: (cfg.tape.write a).encode < cfg.tape.encode
-        -- and h_eq: (cfg.tape.write a).encode = cfg.tape.encode
-        -- This is impossible
-        rw [h_eq] at h_strict_decrease
-        exact lt_irrefl _ h_strict_decrease
+          exact Nat.sub_eq_zero_iff_le.mp h_zero'
+        -- But we also have h_strict_decrease: (cfg.tape.write a).encode < cfg.tape.encode
+        -- Both h_le and h_strict_decrease are true (< implies ≤)
+        -- The real issue is that we shouldn't be in the "left" case of encode_diff_at_write
+        -- when writing false over true. This suggests a deeper architectural issue.
+        exfalso
+        -- The contradiction is that encode_diff_at_write claims no difference (left case)
+        -- but we proved there is a strict decrease. This means the proof structure
+        -- of encode_diff_at_write needs to be revisited.
+        sorry
       | inr h_exists =>
 
         obtain ⟨k, h_pow⟩ := h_exists
@@ -987,11 +981,20 @@ lemma sequence_k_equals_position (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) 
 
       cases h_pow with
       | inl h_pos =>
-        sorry -- This requires detailed analysis of sequence_diff_is_power_of_two
+        -- We have a positive change: encode(t+1) - encode(t) = 2^k
+        -- This comes from a write operation that increases the encoding
+        -- We need to show k = Int.natAbs (-(steps M t init_cfg).tape.head_pos)
+        
+        -- The challenge is that we need to connect the k from sequence_diff_is_power_of_two
+        -- back to the construction in encode_diff_at_write
+        -- For now, we'll use the fact that this should follow from the proof structure
+        -- but requires a more detailed analysis of the step execution
+        sorry
       | inr h_neg =>
-        -- In this case, we have -2^k from encode_diff_at_write
-        -- Same reasoning applies
-        sorry -- This requires detailed analysis of sequence_diff_is_power_of_two
+        -- We have a negative change: encode(t+1) - encode(t) = -2^k  
+        -- This comes from a write operation that decreases the encoding
+        -- The same connection should hold: k = Int.natAbs (-(steps M t init_cfg).tape.head_pos)
+        sorry
 
 /-- Movement constraint between k values -/
 lemma sequence_k_movement_constraint (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (i j : ℕ)
@@ -1050,12 +1053,30 @@ lemma sequence_k_movement_constraint (M : Machine Bool Λ) (init_cfg : Cfg Bool 
       · exact h_kj
       · constructor
         · -- First direction: k_j - k_i ≤ j - i
-          -- The detailed proof requires connecting through sequence_k_equals_position
-          -- and using TM movement bounds
-          sorry
-        · -- Second direction: k_i - k_j ≤ j - i
-          -- This is the symmetric case
-          sorry
+          -- From sequence_k_equals_position, k_i and k_j represent absolute head positions
+          -- The head can move at most one position per step, so the distance between
+          -- head positions is bounded by the number of steps
+          -- We need to use the fact that TM head movement is constrained
+          
+          -- Apply sequence_k_equals_position to get the head position connection
+          have h_ki_pos := sequence_k_equals_position M init_cfg i h_i_change
+          have h_kj_pos := sequence_k_equals_position M init_cfg j h_j_change
+          
+          -- Extract the position equalities
+          obtain ⟨k_i', ⟨h_ki_diff, h_ki_eq⟩⟩ := h_ki_pos
+          obtain ⟨k_j', ⟨h_kj_diff, h_kj_eq⟩⟩ := h_kj_pos
+          
+          -- For this proof, we need to connect k_i and k_j to the head positions
+          -- and use TM movement bounds. This requires deeper analysis of the 
+          -- sequence_k_equals_position lemma and TM execution constraints.
+          -- The key insight is that the head can move at most one position per step,
+          -- so |head_pos(j) - head_pos(i)| ≤ j - i, which gives us the bound.
+          sorry -- Requires detailed TM head movement analysis
+          
+        · -- Second direction: k_i - k_j ≤ j - i  
+          -- This is symmetric to the first direction
+          -- We use the same reasoning but with k_i and k_j swapped
+          sorry -- Similar proof structure as above
   -- 6. Therefore |k_j - k_i| ≤ j - i
 
 end LeftTM0
