@@ -588,185 +588,205 @@ lemma encode_strict_increase_write_true (tape : LeftwardTape Bool) (a : Bool)
 
   linarith
 
-/-- Helper: When natural subtraction is 0 and encode_diff_at_write confirms it's the first case, encodings are equal -/
-lemma encode_diff_at_write_zero_means_equal (cfg : Cfg Bool Λ) (cfg' : Cfg Bool Λ)
-    (h_step : ∃ a, cfg' = ⟨cfg.q, cfg.tape.write a⟩)
-    (h_zero : encode_config cfg' - encode_config cfg = 0) :
-    encode_config cfg' = encode_config cfg := by
-  -- We need to use the fact that encode_diff_at_write only returns
-  -- the first case (nat diff = 0) when the encodings are actually equal
-  
-  -- From encode_diff_at_write, we know the difference is either:
-  -- 1. Natural diff = 0 (and encodings are equal), or
-  -- 2. Integer diff = ±2^k for some k
-  
-  have h_cases := encode_diff_at_write cfg cfg' h_step
-  cases h_cases with
-  | inl h_nat_zero =>
-    -- This case: encode_config cfg' - encode_config cfg = 0
-    -- From the proof of encode_diff_at_write, this happens only when
-    -- the tape doesn't change (writing same value)
-    -- In that case, encodings are equal
-    
-    -- The key insight from encode_diff_at_write's proof:
-    -- First case happens only when a = cfg.tape.read
-    -- In that case, cfg.tape.write a = cfg.tape
-    -- So the encoding doesn't change
-    
-    obtain ⟨a, h_cfg'⟩ := h_step
-    
-    -- We can't directly extract the tape equality from encode_diff_at_write's proof
-    -- But we know that when it returns the first case, it's because the tape didn't change
-    -- Let's prove equality using the properties of natural subtraction
-    
-    -- For natural numbers, if a - b = 0, then a ≤ b
-    have h_le : encode_config cfg' ≤ encode_config cfg := by
-      exact Nat.sub_eq_zero_iff_le.mp h_zero
-    
-    -- We also need to show cfg' ≥ cfg
-    -- The only way the first case holds is if they're equal
-    -- (If cfg' < cfg, we'd be in the second case with -(2^k))
-    
-    -- Actually, let's use a different approach
-    -- From h_nat_zero, we know the statement of the first case holds
-    -- This is exactly what h_zero says
-    -- And from encode_diff_at_write's structure, this only happens when equal
-    
-    -- From the proof of encode_diff_at_write, we can see that the first case (left)
-    -- returns natural subtraction = 0 only when the encodings are actually equal.
-    -- This happens in two scenarios in the proof:
-    -- 1. Writing true over true (lines 54-78)
-    -- 2. Writing false over false (lines 345-389)
-    -- In both cases, the proof shows the encoding doesn't change using simp.
-    
-    -- Since h_nat_zero tells us we're in the first case with natural diff = 0,
-    -- and this matches our h_zero, the encodings must be equal.
-    -- For natural numbers, if a - b = 0, then a ≤ b
-    have h_le : encode_config cfg' ≤ encode_config cfg := 
-      Nat.sub_eq_zero_iff_le.mp h_zero
-    
-    -- We need to show equality. The key is that if cfg' < cfg, then
-    -- the integer difference would be negative, and encode_diff_at_write
-    -- would return the second case (inr) with -(2^k), not the first case.
-    -- Since we're in the first case, we must have equality.
-    
-    -- From h_zero and h_nat_zero matching, we know we're in the case where
-    -- encode_diff_at_write correctly identified that the encodings are equal.
-    -- Looking at the proof of encode_diff_at_write, the inl case happens when:
-    -- 1. Writing true over true (lines 54-78) - encoding doesn't change
-    -- 2. Writing false over false (lines 345-389) - encoding doesn't change
-    -- In both cases, the proof ends with simp showing the encodings are equal.
-    
-    -- The key insight: encode_diff_at_write has three cases in its result:
-    -- 1. inl: natural diff = 0, which happens only when encodings are equal
-    -- 2. inr with positive power: cfg' > cfg
-    -- 3. inr with negative power: cfg' < cfg
-    
-    -- We're in case 1 (inl), and h_nat_zero = h_zero = 0
-    -- This means the encodings didn't change at all
-    
-    -- First, let's prove they can't be different
-    by_cases h_eq : encode_config cfg' = encode_config cfg
-    · exact h_eq
-    · -- If they're not equal, then either cfg' < cfg or cfg' > cfg
-      cases' Nat.lt_trichotomy (encode_config cfg') (encode_config cfg) with h_lt h_eq'
-      · -- Case: cfg' < cfg
-        -- Then integer diff < 0, so encode_diff_at_write would return inr with -(2^k)
-        -- But we're in inl case - contradiction
-        -- From h_zero, we know the natural difference is 0
-        -- This means cfg' ≤ cfg (which we already have as h_le)
-        -- But we also have cfg' < cfg from h_lt
-        -- The only way both can be true is if the natural number system is being used
-        
-        -- The key insight: if cfg' < cfg, then in integers:
-        -- cfg' - cfg < 0, so encode_diff_at_write would return inr with -(2^k)
-        -- But we're in the inl case where natural diff = 0
-        
-        -- Since we can't directly prove this contradiction from the structure of
-        -- encode_diff_at_write, we use the fact that when both:
-        -- 1. Natural diff = 0 (implying cfg' ≤ cfg)
-        -- 2. We're in the inl case of encode_diff_at_write
-        -- Then the encodings must be equal (not just ≤)
-        
-        -- This is a limitation of our current proof approach
-        -- Actually, h_lt : cfg' < cfg is consistent with h_zero : cfg' - cfg = 0
-        -- (natural subtraction gives 0 when cfg' ≤ cfg)
-        -- But the fact that we're in the inl case means the encodings should be equal
-        
-        -- For now, we accept this as a limitation and move on
+/-- Simplified: The difference in encoding when writing is 0 or ±2^|head_pos| -/
+lemma encode_diff_at_write_simple (cfg : Cfg Bool Λ) (a : Bool) :
+    (encode_config ⟨cfg.q, cfg.tape.write a⟩ : ℤ) - encode_config cfg = 
+    if cfg.tape.nth 0 = a then 0
+    else if a = true then 2^(Int.natAbs (-cfg.tape.head_pos))
+    else -(2^(Int.natAbs (-cfg.tape.head_pos)) : ℤ) := by
+  -- Direct case analysis
+  split_ifs with h_same h_write_true
+  · -- Writing same value: no change
+    -- Use the fact from encode_diff_at_write that writing same value doesn't change encoding
+    have h_result := encode_diff_at_write cfg ⟨cfg.q, cfg.tape.write a⟩ ⟨a, rfl⟩
+    cases h_result with
+    | inl h_zero => 
+      -- Natural subtraction is 0, so integer subtraction is also 0
+      simp only [encode_config] at h_zero ⊢
+      -- h_zero : (cfg.tape.write a).encode - cfg.tape.encode = 0
+      -- This means (cfg.tape.write a).encode ≤ cfg.tape.encode
+      have h_le : (cfg.tape.write a).encode ≤ cfg.tape.encode := by
+        rw [← Nat.sub_eq_zero_iff_le]
+        exact h_zero
+      -- But also cfg.tape.encode ≤ (cfg.tape.write a).encode (since they're equal)
+      have h_ge : cfg.tape.encode ≤ (cfg.tape.write a).encode := by
+        -- From encode_diff_at_write proof structure, the zero case only happens
+        -- when writing same value, which means encodings are equal
         sorry
-      · cases' h_eq' with h_eq'' h_gt
-        · -- Case: cfg' = cfg - but we assumed they're not equal
-          exact absurd h_eq'' h_eq
-        · -- Case: cfg' > cfg
-          -- Then natural diff > 0, contradicting h_zero
-          have : encode_config cfg' - encode_config cfg > 0 := Nat.sub_pos_of_lt h_gt
-          exact absurd h_zero (Nat.pos_iff_ne_zero.mp this)
-    
-  | inr h_power =>
-    -- This case: ∃k, integer diff = ±2^k
-    -- But we have h_zero saying natural diff = 0
-    obtain ⟨k, hk⟩ := h_power
-    cases hk with
-    | inl h_pos =>
-      -- Integer diff = 2^k > 0, so cfg' > cfg
-      -- This means natural diff > 0, contradicting h_zero
-      have : encode_config cfg' > encode_config cfg := by
-        have h_int : (encode_config cfg' : ℤ) > (encode_config cfg : ℤ) := by
-          have : (encode_config cfg' : ℤ) - (encode_config cfg : ℤ) = 2^k := h_pos
-          have : (0 : ℤ) < 2^k := by simp
-          linarith
-        exact Nat.cast_lt.mp h_int
-      have : encode_config cfg' - encode_config cfg > 0 := Nat.sub_pos_of_lt this
-      linarith
-    | inr h_neg =>
-      -- Integer diff = -(2^k) < 0, so cfg' < cfg
-      -- Natural diff = 0 is consistent with this
-      -- But we need to prove equality, which is false in this case
-      
-      -- Integer diff = -(2^k) < 0, so cfg' < cfg
-      -- This means encode_config cfg' < encode_config cfg
-      have h_lt : encode_config cfg' < encode_config cfg := by
-        have h_int_lt : (encode_config cfg' : ℤ) < encode_config cfg := by
-          have : (encode_config cfg' : ℤ) - encode_config cfg = -(2^k : ℤ) := h_neg
-          have h_neg_pow : -(2^k : ℤ) < 0 := by simp
-          linarith
-        exact Nat.cast_lt.mp h_int_lt
-      
-      -- But natural subtraction = 0 when cfg' ≤ cfg
-      have h_le : encode_config cfg' ≤ encode_config cfg := 
-        Nat.sub_eq_zero_iff_le.mp h_zero
-      
-      -- So we have cfg' < cfg and cfg' ≤ cfg, which means cfg' < cfg
-      -- But we need to prove cfg' = cfg, which is false
-      -- This case represents a genuine contradiction - we can't have both:
-      -- 1. Natural diff = 0 (implying cfg' ≤ cfg)
-      -- 2. Integer diff = -(2^k) (implying cfg' < cfg)
-      -- AND conclude that cfg' = cfg
-      
-      -- The issue is that this lemma is only meant to be used when we know
-      -- we're in the "no change" case. If we reach here, it means we've 
-      -- misapplied the lemma.
-      
-      -- We have h_lt : cfg' < cfg, which means the encodings are not equal
-      -- But we're trying to prove they are equal - this is impossible
-      -- The lemma should only be used when we know we're in the inl case
-      -- h_lt : encode_config cfg' < encode_config cfg
-      -- h_le : encode_config cfg' ≤ encode_config cfg
-      -- From h_lt and h_le, we cannot have both cfg' < cfg and cfg' ≤ cfg
-      -- unless cfg' = cfg. But we're in the case where encoding difference is negative.
-      -- This is impossible - if cfg' = cfg, difference would be 0, not negative.
-      exfalso
-      -- From the proof structure, we have:
-      -- h_neg : encode_config cfg' - encode_config cfg = -2^k (as integers)
-      -- h_zero : encode_config cfg' - encode_config cfg = 0 (as naturals)
-      -- This means encode_config cfg' < encode_config cfg
-      -- But we also have h_le : encode_config cfg' ≤ encode_config cfg
-      -- and h_lt : encode_config cfg' < encode_config cfg
-      -- These are consistent. The issue is we're trying to prove equality.
-      -- Actually, this case should be impossible - we can't have both
-      -- natural subtraction = 0 and integer subtraction = -2^k
+      -- So they're equal
+      have h_eq : (cfg.tape.write a).encode = cfg.tape.encode := by
+        exact Nat.le_antisymm h_le h_ge
+      simp [h_eq]
+    | inr h_exists =>
+      -- If there's a non-zero difference but we're writing the same value, 
+      -- that contradicts the proof structure of encode_diff_at_write
       sorry
+  · -- Writing true (and it's different from current)
+    -- Current must be false since h_same : ¬(cfg.tape.nth 0 = a) and h_write_true : a = true
+    have h_current_false : cfg.tape.nth 0 = false := by
+      cases h_eq : cfg.tape.nth 0 with
+      | false => rfl
+      | true => 
+        -- If current is true and a is true, then cfg.tape.nth 0 = a
+        exfalso
+        exact h_same (h_eq ▸ h_write_true.symm)
+    -- Use encode_strict_increase_write_true
+    have h_inc := encode_strict_increase_write_true cfg.tape a h_current_false h_write_true
+    -- From encode_diff_at_write
+    have h_result := encode_diff_at_write cfg ⟨cfg.q, cfg.tape.write a⟩ ⟨a, rfl⟩
+    cases h_result with
+    | inl h_zero =>
+      -- Natural subtraction is 0 but we know encoding increases - contradiction
+      exfalso
+      simp only [encode_config] at h_zero h_inc
+      have h_le : (cfg.tape.write a).encode ≤ cfg.tape.encode := by
+        rw [← Nat.sub_eq_zero_iff_le]
+        exact h_zero
+      -- We have h_inc : cfg.tape.encode < (cfg.tape.write a).encode
+      -- and h_le : (cfg.tape.write a).encode ≤ cfg.tape.encode
+      -- This is a contradiction
+      exact absurd h_inc (Nat.not_lt.mpr h_le)
+    | inr h_exists =>
+      obtain ⟨k, h_k⟩ := h_exists
+      cases h_k with
+      | inl h_pos =>
+        -- This is expected: positive difference
+        simp only [encode_config] at h_pos ⊢
+        -- We need to show k = Int.natAbs (-cfg.tape.head_pos)
+        sorry
+      | inr h_neg =>
+        -- Negative difference when writing true over false - contradiction
+        exfalso
+        simp only [encode_config] at h_neg h_inc
+        have : (cfg.tape.write a).encode < cfg.tape.encode := by
+          -- h_neg : (cfg.tape.write a).encode - cfg.tape.encode = -(2^k)
+          -- This means (cfg.tape.write a).encode < cfg.tape.encode
+          have h_neg' : ((cfg.tape.write a).encode : ℤ) - (cfg.tape.encode : ℤ) < 0 := by
+            rw [h_neg]
+            simp
+          have : ((cfg.tape.write a).encode : ℤ) < (cfg.tape.encode : ℤ) := by linarith
+          exact Nat.cast_lt.mp this
+        -- But h_inc says cfg.tape.encode < (cfg.tape.write a).encode
+        exact absurd this (Nat.not_lt.mpr (Nat.le_of_lt h_inc))
+  · -- Writing false (and it's different from current)
+    -- h_same : ¬(cfg.tape.nth 0 = a), h_write_true : ¬(a = true)
+    -- So a = false and current must be true
+    have h_a_false : a = false := by
+      cases a with
+      | false => rfl  
+      | true => contradiction
+    have h_current_true : cfg.tape.nth 0 = true := by
+      cases h_eq : cfg.tape.nth 0 with
+      | false =>
+        -- If current is false and a is false, then cfg.tape.nth 0 = a
+        exfalso
+        exact h_same (h_eq ▸ h_a_false.symm)
+      | true => rfl
+    -- Use encode_strict_decrease_write_false
+    have h_dec := encode_strict_decrease_write_false cfg.tape a h_current_true h_a_false
+    -- From encode_diff_at_write
+    have h_result := encode_diff_at_write cfg ⟨cfg.q, cfg.tape.write a⟩ ⟨a, rfl⟩
+    cases h_result with
+    | inl h_zero =>
+      -- Natural subtraction is 0 but we know encoding decreases - contradiction
+      exfalso
+      simp only [encode_config] at h_zero h_dec
+      have h_le : (cfg.tape.write a).encode ≤ cfg.tape.encode := by
+        rw [← Nat.sub_eq_zero_iff_le]
+        exact h_zero
+      -- We have h_dec : (cfg.tape.write a).encode < cfg.tape.encode
+      -- and h_le : (cfg.tape.write a).encode ≤ cfg.tape.encode
+      -- This is consistent, but we need h_dec to be strict inequality
+      -- Natural subtraction = 0 means (cfg.tape.write a).encode ≤ cfg.tape.encode
+      -- But we also know (cfg.tape.write a).encode < cfg.tape.encode
+      -- So we must have equality to get natural subtraction = 0
+      have h_eq : (cfg.tape.write a).encode = cfg.tape.encode := by
+        -- h_dec : (cfg.tape.write a).encode < cfg.tape.encode
+        -- h_le : (cfg.tape.write a).encode ≤ cfg.tape.encode
+        -- The only way both can be true is if we have strict inequality
+        -- But natural subtraction = 0 requires ≤, which we have
+        -- Actually, this is impossible - we can't have both natural diff = 0 and strict decrease
+        sorry
+      -- But this contradicts h_dec
+      rw [h_eq] at h_dec
+      exact Nat.lt_irrefl _ h_dec
+    | inr h_exists =>
+      obtain ⟨k, h_k⟩ := h_exists
+      cases h_k with
+      | inl h_pos =>
+        -- Positive difference when writing false over true - contradiction
+        exfalso
+        simp only [encode_config] at h_pos h_dec
+        have : (cfg.tape.write a).encode > cfg.tape.encode := by
+          -- From h_pos: (cfg.tape.write a).encode - cfg.tape.encode = 2^k
+          have h_eq : ((cfg.tape.write a).encode : ℤ) = (cfg.tape.encode : ℤ) + (2^k : ℤ) := by linarith
+          have h_2k_pos : (0 : ℤ) < 2^k := by simp
+          have : ((cfg.tape.write a).encode : ℤ) > (cfg.tape.encode : ℤ) := by linarith
+          exact Nat.cast_lt.mp this
+        linarith
+      | inr h_neg =>
+        -- This is expected: negative difference
+        simp only [encode_config] at h_neg ⊢
+        -- We need to show k = Int.natAbs (-cfg.tape.head_pos)
+        sorry
+
+/-- Direct computation of encoding difference when writing at head position -/
+lemma encode_write_diff_value (cfg : Cfg Bool Λ) (a : Bool) :
+    (encode_config ⟨cfg.q, cfg.tape.write a⟩ : ℤ) - encode_config cfg = 
+    if cfg.tape.nth 0 = a then 0
+    else if cfg.tape.nth 0 = true then -(2^(Int.natAbs (-cfg.tape.head_pos)) : ℤ)
+    else 2^(Int.natAbs (-cfg.tape.head_pos)) := by
+  -- Direct computation based on what value is being written
+  split_ifs with h_same h_was_true
+  · -- Writing same value: no change
+    have h_write_eq : cfg.tape.tape.write a = cfg.tape.tape := by
+      apply Turing.Tape.ext
+      intro i
+      by_cases h_pos : i = 0
+      · rw [h_pos, Turing.Tape.write_nth]
+        simp
+        have : cfg.tape.tape.head = cfg.tape.nth 0 := by
+          simp [LeftwardTape.nth, Turing.Tape.nth, LeftwardTape.tape]
+        rw [this]
+        exact h_same.symm
+      · rw [Turing.Tape.write_nth]
+        simp [h_pos]
+    simp only [encode_config, LeftwardTape.write]
+    rw [h_write_eq]
+    ring
+  · -- Was true, now writing false (since not same and was true)
+    have h_a_false : a = false := by
+      cases a with
+      | false => rfl
+      | true => 
+        -- If a = true and cfg.tape.nth 0 = true, then they're the same
+        -- h_same : ¬(cfg.tape.nth 0 = a), h_was_true : cfg.tape.nth 0 = true
+        -- So if a = true, then cfg.tape.nth 0 = a, contradiction
+        exfalso
+        exact h_same h_was_true
+    -- Use encode_strict_decrease_write_false or inline the proof
+    sorry -- Complete this case
+  · -- Was false, now writing true
+    have h_current_false : cfg.tape.nth 0 = false := by
+      cases h_eq : cfg.tape.nth 0 with
+      | false => rfl
+      | true => 
+        -- h_was_true : ¬(cfg.tape.nth 0 = true)
+        -- But h_eq : cfg.tape.nth 0 = true
+        exfalso
+        exact h_was_true h_eq
+    have h_a_true : a = true := by
+      cases a with
+      | false => 
+        -- h_same : ¬(cfg.tape.nth 0 = a)
+        -- h_current_false : cfg.tape.nth 0 = false
+        -- So cfg.tape.nth 0 = a, contradiction
+        exfalso
+        exact h_same h_current_false
+      | true => rfl
+    -- Prove encoding increases by 2^|head_pos|
+    sorry -- Complete this case
+
 
 /-- One step of a TM changes the encoding by 0 or ±2^k -/
 lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
@@ -858,12 +878,11 @@ lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool �
               exact h_zero
             -- When encode_diff_at_write returns left (h_zero), encodings are equal
             have h_eq : ((steps M t init_cfg).tape.write a).encode = (steps M t init_cfg).tape.encode := by
-              -- We're in the inl case from h_result, so natural difference is 0
-              have h_eq' := encode_diff_at_write_zero_means_equal (steps M t init_cfg)
-                            ⟨(steps M t init_cfg).q, (steps M t init_cfg).tape.write a⟩
-                            ⟨a, rfl⟩ h_zero
-              simp only [encode_config] at h_eq'
-              exact h_eq'
+              -- Natural subtraction = 0 means ≤
+              -- From the proof of encode_diff_at_write, the inl case only happens
+              -- when writing the same value (true over true or false over false)
+              -- In those cases, the encoding doesn't change
+              sorry -- Direct proof that natural diff = 0 implies equality in this context
             simp [h_eq]
           | inr h_exists =>
             right
@@ -896,11 +915,11 @@ lemma encode_change_from_step (M : Machine Bool Λ) (cfg : Cfg Bool Λ)
     -- h_zero tells us (cfg.tape.write a).encode ≤ cfg.tape.encode
     -- Since natural subtraction is 0, they must be equal
     have h_eq : (cfg.tape.write a).encode = cfg.tape.encode := by
-      -- We have h_zero: natural difference = 0
-      -- Apply our helper lemma
-      have h_eq' := encode_diff_at_write_zero_means_equal cfg ⟨cfg.q, cfg.tape.write a⟩ ⟨a, rfl⟩ h_zero
-      simp only [encode_config] at h_eq'
-      exact h_eq'
+      -- Natural subtraction = 0 means ≤
+      -- From the proof of encode_diff_at_write, the inl case only happens
+      -- when writing the same value (true over true or false over false)
+      -- In those cases, the encoding doesn't change
+      sorry -- Direct proof that natural diff = 0 implies equality in this context
     simp [h_eq]
   | inr h_exists =>
     obtain ⟨k, h_k⟩ := h_exists
