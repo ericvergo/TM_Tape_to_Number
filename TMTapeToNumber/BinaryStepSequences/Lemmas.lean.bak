@@ -1084,4 +1084,279 @@ lemma sequence_k_movement_constraint (M : Machine Bool Λ) (init_cfg : Cfg Bool 
           sorry
         · -- Second direction: k_i - k_j ≤ j - i
           sorry
+            linarith
+
+          -- Convert to natural numbers
+          -- Since both are non-negative (being absolute values), we can use natAbs
+          have h_nat_bound : Int.natAbs (-(steps M j init_cfg).tape.head_pos) ≤
+                            Int.natAbs (-(steps M i init_cfg).tape.head_pos) + (j - i) := by
+            -- From the integer inequality above, we have:
+            -- -(head_pos(j)) - (-(head_pos(i))) ≤ j - i
+            -- So -(head_pos(j)) ≤ -(head_pos(i)) + (j - i)
+            -- Since head positions are non-positive, -head_pos is non-negative
+            -- So we can apply Int.natAbs_le
+            have h_neg_i_nonneg : 0 ≤ -(steps M i init_cfg).tape.head_pos := by linarith
+            have h_neg_j_nonneg : 0 ≤ -(steps M j init_cfg).tape.head_pos := by linarith
+            -- Apply Int.natAbs properties
+            have h_abs_j : Int.natAbs (-(steps M j init_cfg).tape.head_pos) = -(steps M j init_cfg).tape.head_pos := 
+              Int.natAbs_of_nonneg h_neg_j_nonneg
+            have h_abs_i : Int.natAbs (-(steps M i init_cfg).tape.head_pos) = -(steps M i init_cfg).tape.head_pos := 
+              Int.natAbs_of_nonneg h_neg_i_nonneg
+            -- The goal is about natural numbers, not their casts
+            -- We need to show the inequality holds for the natural numbers themselves
+            -- Since h_abs_j and h_abs_i tell us the natAbs values equal the negated head positions,
+            -- we can work with those directly
+            have h_ineq : -(steps M j init_cfg).tape.head_pos ≤ -(steps M i init_cfg).tape.head_pos + (j - i) := by
+              linarith
+            -- Now we use that all values are non-negative integers
+            -- We have h_ineq: -(head_pos(j)) ≤ -(head_pos(i)) + (j - i)
+            -- Since all are non-negative, we can convert to naturals
+            -- First, let's establish the natural number versions
+            -- We can directly work with the inequality since all values are natural
+            -- From h_ineq and the fact that all values are non-negative integers
+            -- Since the values are non-negative, natAbs gives us the natural number
+            have h_j_val : Int.natAbs (-(steps M j init_cfg).tape.head_pos) = (-(steps M j init_cfg).tape.head_pos) := 
+              Int.natAbs_of_nonneg h_neg_j_nonneg
+            have h_i_val : Int.natAbs (-(steps M i init_cfg).tape.head_pos) = (-(steps M i init_cfg).tape.head_pos) := 
+              Int.natAbs_of_nonneg h_neg_i_nonneg
+            -- From h_ineq and the natAbs equalities, we can derive the natural number inequality
+            -- The goal is about natural numbers, and we have the integer inequality
+            -- Use the fact that casting preserves the values
+            have : (Int.natAbs (-(steps M j init_cfg).tape.head_pos) : ℤ) = -(steps M j init_cfg).tape.head_pos := by
+              rw [h_j_val]
+            have : (Int.natAbs (-(steps M i init_cfg).tape.head_pos) : ℤ) = -(steps M i init_cfg).tape.head_pos := by
+              rw [h_i_val]
+            -- Now we can use omega with h_ineq
+            omega
+
+          -- Rearrange to get the desired form
+          have : (Int.natAbs (-(steps M j init_cfg).tape.head_pos) : ℤ) -
+                 Int.natAbs (-(steps M i init_cfg).tape.head_pos) ≤ j - i := by
+            -- From h_nat_bound: natAbs(j) ≤ natAbs(i) + (j - i)
+            -- So: natAbs(j) - natAbs(i) ≤ j - i
+            have h_cast : (Int.natAbs (-(steps M j init_cfg).tape.head_pos) : ℤ) ≤ 
+                         (Int.natAbs (-(steps M i init_cfg).tape.head_pos) : ℤ) + (j - i : ℤ) := by
+              -- We need to prove the inequality with the exact type expected
+              -- The issue is that h_nat_bound uses natural subtraction but the goal uses integer subtraction
+              -- We'll use the fact that j > i (from h_order) to handle this
+              have h_j_ge_i : j ≥ i := Nat.le_of_lt h_order
+              -- For natural numbers where j ≥ i, we have (j - i : ℕ) = j - i as integers
+              have h_sub_eq : ((j - i : ℕ) : ℤ) = (j : ℤ) - (i : ℤ) := by
+                exact Nat.cast_sub h_j_ge_i
+              -- Now cast the natural number inequality to integers
+              have h1 : (Int.natAbs (-(steps M j init_cfg).tape.head_pos) : ℤ) ≤ 
+                       (Int.natAbs (-(steps M i init_cfg).tape.head_pos) : ℤ) + ((j - i : ℕ) : ℤ) := by
+                -- Cast h_nat_bound: a ≤ b + (j - i) where all are naturals
+                have h2 : (Int.natAbs (-(steps M j init_cfg).tape.head_pos) : ℤ) ≤ 
+                         (Int.natAbs (-(steps M i init_cfg).tape.head_pos) + (j - i : ℕ) : ℤ) := 
+                  Nat.cast_le.mpr h_nat_bound
+                -- Now (b + (j - i) : ℤ) = (b : ℤ) + ((j - i) : ℤ)
+                have h3 : ((Int.natAbs (-(steps M i init_cfg).tape.head_pos) + (j - i : ℕ)) : ℤ) = 
+                         (Int.natAbs (-(steps M i init_cfg).tape.head_pos) : ℤ) + ((j - i : ℕ) : ℤ) := 
+                  Nat.cast_add _ _
+                rw [h3] at h2
+                exact h2
+              -- Apply the subtraction equality: ((j - i : ℕ) : ℤ) = (j : ℤ) - (i : ℤ)
+              rw [h_sub_eq] at h1
+              exact h1
+            linarith
+
+          exact this
+
+        · -- Second direction: k_i - k_j ≤ j - i
+          -- This is symmetric to the first direction
+
+          -- Apply sequence_k_equals_position
+          have h_ki_pos := sequence_k_equals_position M init_cfg i h_i_change
+          have h_kj_pos := sequence_k_equals_position M init_cfg j h_j_change
+
+          obtain ⟨k_i', ⟨h_ki_diff, h_ki_eq⟩⟩ := h_ki_pos
+          obtain ⟨k_j', ⟨h_kj_diff, h_kj_eq⟩⟩ := h_kj_pos
+
+          -- Establish k_i' = k_i and k_j' = k_j (same proof as before)
+          have h_ki'_eq : k_i' = k_i := by
+            cases h_ki_diff with
+            | inl h_pos_i' =>
+              cases h_ki with
+              | inl h_pos_i =>
+                have : (2^k_i' : ℤ) = 2^k_i := by rw [← h_pos_i', h_pos_i]
+                have h_eq_nat : 2^k_i' = 2^k_i := by exact_mod_cast this
+                exact Nat.pow_right_injective (by omega : 1 < 2) h_eq_nat
+              | inr h_neg_i =>
+                have : (2^k_i' : ℤ) = -(2^k_i : ℤ) := by rw [← h_pos_i', h_neg_i]
+                have : (2^k_i' : ℤ) + (2^k_i : ℤ) = 0 := by linarith
+                have h_pos1 : (0 : ℤ) < 2^k_i' := by simp
+                have h_pos2 : (0 : ℤ) < 2^k_i := by simp
+                linarith
+            | inr h_neg_i' =>
+              cases h_ki with
+              | inl h_pos_i =>
+                have : -(2^k_i' : ℤ) = (2^k_i : ℤ) := by rw [← h_neg_i', h_pos_i]
+                have : (2^k_i' : ℤ) + (2^k_i : ℤ) = 0 := by linarith
+                have h_pos1 : (0 : ℤ) < 2^k_i' := by simp
+                have h_pos2 : (0 : ℤ) < 2^k_i := by simp
+                linarith
+              | inr h_neg_i =>
+                have : -(2^k_i' : ℤ) = -(2^k_i : ℤ) := by rw [← h_neg_i', h_neg_i]
+                have : (2^k_i' : ℤ) = 2^k_i := by linarith
+                have h_eq_nat : 2^k_i' = 2^k_i := by exact_mod_cast this
+                exact Nat.pow_right_injective (by omega : 1 < 2) h_eq_nat
+
+          have h_kj'_eq : k_j' = k_j := by
+            cases h_kj_diff with
+            | inl h_pos_j' =>
+              cases h_kj with
+              | inl h_pos_j =>
+                have : (2^k_j' : ℤ) = 2^k_j := by rw [← h_pos_j', h_pos_j]
+                have h_eq_nat : 2^k_j' = 2^k_j := by exact_mod_cast this
+                exact Nat.pow_right_injective (by omega : 1 < 2) h_eq_nat
+              | inr h_neg_j =>
+                have : (2^k_j' : ℤ) = -(2^k_j : ℤ) := by rw [← h_pos_j', h_neg_j]
+                have : (2^k_j' : ℤ) + (2^k_j : ℤ) = 0 := by linarith
+                have h_pos1 : (0 : ℤ) < 2^k_j' := by simp
+                have h_pos2 : (0 : ℤ) < 2^k_j := by simp
+                linarith
+            | inr h_neg_j' =>
+              cases h_kj with
+              | inl h_pos_j =>
+                have : -(2^k_j' : ℤ) = (2^k_j : ℤ) := by rw [← h_neg_j', h_pos_j]
+                have : (2^k_j' : ℤ) + (2^k_j : ℤ) = 0 := by linarith
+                have h_pos1 : (0 : ℤ) < 2^k_j' := by simp
+                have h_pos2 : (0 : ℤ) < 2^k_j := by simp
+                linarith
+              | inr h_neg_j =>
+                have : -(2^k_j' : ℤ) = -(2^k_j : ℤ) := by rw [← h_neg_j', h_neg_j]
+                have : (2^k_j' : ℤ) = 2^k_j := by linarith
+                have h_eq_nat : 2^k_j' = 2^k_j := by exact_mod_cast this
+                exact Nat.pow_right_injective (by omega : 1 < 2) h_eq_nat
+
+          rw [← h_ki'_eq, ← h_kj'_eq]
+          rw [h_ki_eq, h_kj_eq]
+
+          -- We need: |head_pos(i)| - |head_pos(j)| ≤ j - i
+          -- The head can move at most j-i positions from time i to time j
+          have h_head_bound : (steps M i init_cfg).tape.head_pos ≥ (steps M j init_cfg).tape.head_pos - (j - i) := by
+            -- We need a different approach here
+            -- head_pos(i) ≥ init_pos - i (from head_pos_bound)
+            -- head_pos(j) ≥ init_pos - j (from head_pos_bound)
+            -- So: init_pos ≤ head_pos(j) + j
+            -- Therefore: head_pos(i) ≥ init_pos - i ≥ head_pos(j) + j - i = head_pos(j) + (j - i)
+            -- Wait, this gives us the wrong direction.
+            
+            -- Actually, we need to think differently.
+            -- Between times i and j, the head moves at most j-i steps
+            -- So |head_pos(j) - head_pos(i)| ≤ j - i
+            -- This means: head_pos(i) - (j-i) ≤ head_pos(j) ≤ head_pos(i) + (j-i)
+            -- We want the first inequality: head_pos(i) ≥ head_pos(j) - (j-i)
+            
+            -- The key insight: between any two time points, the head position
+            -- can change by at most the number of steps between them
+            -- We need the opposite inequality: head_pos(i) ≥ head_pos(j) - (j-i)
+            -- This is equivalent to: head_pos(j) - head_pos(i) ≤ j - i
+            -- The head position can change by at most 1 per step, and we have j - i steps
+            
+            -- Actually, let's think about this differently.
+            -- We know from the first direction that:
+            -- head_pos(j) ≥ head_pos(i) - (j - i)
+            -- This gives us: head_pos(i) - head_pos(j) ≤ j - i
+            -- But we need: head_pos(i) ≥ head_pos(j) - (j - i)
+            
+            -- The key is that the head movement is bounded in both directions
+            -- In j - i steps, the head can move at most j - i positions in either direction
+            -- So: |head_pos(j) - head_pos(i)| ≤ j - i
+            
+            -- Let's prove this by considering the worst case
+            -- If the head moves right as much as possible, head_pos increases
+            -- If the head moves left as much as possible, head_pos decreases
+            -- But LeftwardTape constrains rightward movement (can't go past 0)
+            
+            -- Since both head positions are ≤ 0, let's use absolute values
+            have h_i_nonpos' : (steps M i init_cfg).tape.head_pos ≤ 0 := (steps M i init_cfg).tape.head_nonpos
+            have h_j_nonpos' : (steps M j init_cfg).tape.head_pos ≤ 0 := (steps M j init_cfg).tape.head_nonpos
+            
+            -- We already proved in the first direction that head_pos(j) ≥ head_pos(i) - (j-i)
+            -- From this we get: head_pos(i) - head_pos(j) ≤ j - i
+            -- Now we need: head_pos(i) ≥ head_pos(j) - (j - i)
+            -- This is equivalent to: head_pos(j) - head_pos(i) ≥ -(j - i)
+            
+            -- The head can move at most 1 position right per step (and is blocked at 0)
+            -- So head_pos(j) ≤ head_pos(i) + (j - i) (accounting for the 0 boundary)
+            -- But since head positions are ≤ 0, we need to be more careful
+            
+            -- Let's use the symmetric argument
+            -- Between times i and j, the sequence of steps is fixed
+            -- The total displacement is head_pos(j) - head_pos(i)
+            -- This displacement is achieved in j - i steps
+            -- Each step moves by at most 1, so |displacement| ≤ j - i
+            
+            -- Therefore: -(j - i) ≤ head_pos(j) - head_pos(i) ≤ j - i
+            -- From the left inequality: head_pos(i) ≥ head_pos(j) - (j - i)
+            
+            -- Let's prove this using the fact that we can bound movement in both directions
+            have h_movement_bound : |(steps M j init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos| ≤ j - i := by
+              -- This is a fundamental property of TM head movement
+              -- but we'll need to prove it from first principles
+              sorry
+            
+            -- From the absolute value bound, we get both directions
+            have h_both : -(j - i : ℤ) ≤ (steps M j init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos ∧
+                         (steps M j init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos ≤ j - i := by
+              sorry
+            
+            -- We want the first part: -(j-i) ≤ head_pos(j) - head_pos(i)
+            -- This gives us: head_pos(i) ≥ head_pos(j) - (j-i)
+            linarith [h_both.1]
+
+          have h_i_nonpos : (steps M i init_cfg).tape.head_pos ≤ 0 := (steps M i init_cfg).tape.head_nonpos
+          have h_j_nonpos : (steps M j init_cfg).tape.head_pos ≤ 0 := (steps M j init_cfg).tape.head_nonpos
+
+          -- |head_pos(i)| - |head_pos(j)| = -head_pos(i) - (-head_pos(j))
+          --                                = head_pos(j) - head_pos(i)
+          have this_correct : (steps M j init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos ≤ j - i := by
+            -- From h_head_bound: head_pos(i) ≥ head_pos(j) - (j - i)
+            -- So: head_pos(j) - head_pos(i) ≤ j - i
+            linarith
+          
+          have : (-(steps M i init_cfg).tape.head_pos : ℤ) - (-(steps M j init_cfg).tape.head_pos) ≤ j - i := by
+            simp only [neg_sub_neg]
+            exact this_correct
+
+          -- Convert to natural numbers
+          have h_int_ineq : (Int.natAbs (-(steps M i init_cfg).tape.head_pos) : ℤ) -
+                           Int.natAbs (-(steps M j init_cfg).tape.head_pos) ≤ j - i := by
+            -- We have: -(head_pos(i)) - (-(head_pos(j))) ≤ j - i
+            -- Which is: head_pos(j) - head_pos(i) ≤ j - i
+            -- Since head positions are non-positive:
+            -- natAbs(-head_pos(i)) = -head_pos(i) and natAbs(-head_pos(j)) = -head_pos(j)
+            have h_neg_i_nonneg : 0 ≤ -(steps M i init_cfg).tape.head_pos := by linarith
+            have h_neg_j_nonneg : 0 ≤ -(steps M j init_cfg).tape.head_pos := by linarith
+            rw [Int.natAbs_of_nonneg h_neg_i_nonneg, Int.natAbs_of_nonneg h_neg_j_nonneg]
+            -- Now the goal is: (-head_pos(i)) - (-head_pos(j)) ≤ j - i
+            -- Which is: head_pos(j) - head_pos(i) ≤ j - i
+            -- Note that neg_sub_neg gives us: -a - -b = b - a
+            have h_rewrite : -(steps M i init_cfg).tape.head_pos - -(steps M j init_cfg).tape.head_pos = 
+                            (steps M j init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos := by
+              simp only [neg_sub_neg]
+            rw [h_rewrite]
+            exact this_correct
+
+          -- The goal expects natural number subtraction
+          show Int.natAbs (-(steps M i init_cfg).tape.head_pos) -
+               Int.natAbs (-(steps M j init_cfg).tape.head_pos) ≤ j - i
+
+          -- Convert from integer inequality to natural
+          by_cases h_le : Int.natAbs (-(steps M i init_cfg).tape.head_pos) ≤
+                         Int.natAbs (-(steps M j init_cfg).tape.head_pos)
+          · -- If k_i ≤ k_j, then k_i - k_j = 0 in naturals
+            rw [Nat.sub_eq_zero_of_le h_le]
+            exact Nat.zero_le _
+          · -- If k_i > k_j, then we can use the integer inequality
+            push_neg at h_le
+            -- The goal is about natural subtraction, but h_int_ineq is about integer subtraction
+            -- We need to show they're related when k_i > k_j
+
+            -- From h_int_ineq and the fact that all values are natural numbers:
+            sorry -- TODO: Complete the proof using integer/natural subtraction relationship
+  -- 6. Therefore |k_j - k_i| ≤ j - i
+
 end LeftTM0
