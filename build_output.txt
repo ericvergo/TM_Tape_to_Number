@@ -1,30 +1,12 @@
-⚠ [857/932] Replayed TMTapeToNumber.LeftTM0.LeftwardTape
-warning: TMTapeToNumber/LeftTM0/LeftwardTape.lean:74:8: declaration uses 'sorry'
-⚠ [927/932] Replayed TMTapeToNumber.BinaryStepSequences.Basic
-warning: TMTapeToNumber/BinaryStepSequences/Basic.lean:114:6: declaration uses 'sorry'
-✖ [929/932] Building TMTapeToNumber.BinaryStepSequences.Theorems
-trace: .> LEAN_PATH=/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/batteries/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Qq/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/aesop/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/importGraph/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/plausible/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/MD4Lean/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/BibtexQuery/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/UnicodeBasic/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/Cli/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/mathlib/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/packages/doc-gen4/.lake/build/lib/lean:/Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean /Users/eric/.elan/toolchains/leanprover--lean4---v4.21.0-rc3/bin/lean -Dpp.unicode.fun=true -DautoImplicit=false /Users/eric/Documents/GitHub/TM_Tape_to_Number/TMTapeToNumber/BinaryStepSequences/Theorems.lean -R /Users/eric/Documents/GitHub/TM_Tape_to_Number -o /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/BinaryStepSequences/Theorems.olean -i /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/lib/lean/TMTapeToNumber/BinaryStepSequences/Theorems.ilean -c /Users/eric/Documents/GitHub/TM_Tape_to_Number/.lake/build/ir/TMTapeToNumber/BinaryStepSequences/Theorems.c --json
-error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:30:4: no goals to be solved
-error: TMTapeToNumber/BinaryStepSequences/Theorems.lean:122:18: tactic 'contradiction' failed
-case true
-Λ : Type u_1
-inst✝ : Inhabited Λ
-cfg cfg' : Cfg Bool Λ
-a : Bool
-h_cfg' : cfg' = { q := cfg.q, tape := cfg.tape.write a }
-current_val : Bool := cfg.tape.nth 0
-h_current : ¬current_val = true
-h_new : ¬a = true
-h_read : cfg.tape.tape.nth 0 = current_val
-⊢ true = false
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:148:6: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:168:6: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:184:6: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:200:6: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:268:8: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:308:18: declaration uses 'sorry'
-warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:313:8: declaration uses 'sorry'
-error: Lean exited with code 1
-Some required builds logged failures:
-- TMTapeToNumber.BinaryStepSequences.Theorems
-error: build failed
+⚠ [928/933] Replayed TMTapeToNumber.BinaryStepSequences.Lemmas
+warning: TMTapeToNumber/BinaryStepSequences/Lemmas.lean:592:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Lemmas.lean:863:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Lemmas.lean:1377:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Lemmas.lean:1624:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Lemmas.lean:1721:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Lemmas.lean:1858:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Lemmas.lean:1988:6: declaration uses 'sorry'
+warning: TMTapeToNumber/BinaryStepSequences/Lemmas.lean:2112:6: declaration uses 'sorry'
+⚠ [929/933] Replayed TMTapeToNumber.BinaryStepSequences.Theorems
+warning: TMTapeToNumber/BinaryStepSequences/Theorems.lean:346:8: declaration uses 'sorry'
+Build completed successfully.

@@ -7,5 +7,7 @@ LeftTM0.sequence_diff_is_power_of_two
 LeftTM0.sequence_k_equals_position
 LeftTM0.sequence_k_bound
 LeftTM0.sequence_k_movement_constraint
+LeftTM0.encode_nat_diff_zero_cases
+LeftTM0.encode_same_value_zero_diff
 LeftTM0.construct_tm_for_sequence
 LeftTM0.finite_binary_step_sequence_generable

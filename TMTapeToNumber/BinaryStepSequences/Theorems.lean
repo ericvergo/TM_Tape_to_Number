@@ -1,4 +1,7 @@
 import TMTapeToNumber.BinaryStepSequences.Basic
+import TMTapeToNumber.BinaryStepSequences.EncodingDifference
+import TMTapeToNumber.BinaryStepSequences.EncodingProperties  
+import TMTapeToNumber.BinaryStepSequences.SequenceProperties
 import TMTapeToNumber.BinaryStepSequences.Lemmas
 import TMTapeToNumber.LeftwardSequences.Theorems
 import TMTapeToNumber.LeftTM0.LeftwardTape
@@ -32,13 +35,19 @@ theorem tm_sequence_is_binary_step_sequence (M : Machine Bool Λ) (init_cfg : Cf
     exact encode_empty_tape
   constructor
   · -- Condition 2: differences are 0 or ±2^k
-    exact sequence_diff_is_power_of_two M init_cfg
+    exact BinaryStepSequences.sequence_diff_is_power_of_two M init_cfg
   · -- Condition 3: movement constraints
     intro t ht
     simp only [change_indices, Set.mem_setOf] at ht
+    -- From ht we know the sequence changes at t
+    have h_change : sequence M init_cfg t ≠ sequence M init_cfg (t + 1) := by
+      exact fun h => ht h.symm
+    -- Need to show the machine hasn't terminated
+    have h_cont : ¬is_terminal M (steps M t init_cfg) := by
+      sorry  -- This needs to be proven: if sequence changes, machine hasn't terminated
     constructor
     · -- 3(a): k_t ≤ t
-      obtain ⟨k, hk_def, hk_eq⟩ := sequence_k_equals_position M init_cfg t ht
+      obtain ⟨k, hk_def, hk_eq⟩ := BinaryStepSequences.sequence_k_equals_position M init_cfg t h_cont h_change
       use k
       refine ⟨hk_def, ?_⟩
       rw [hk_eq]
@@ -61,7 +70,45 @@ theorem tm_sequence_is_binary_step_sequence (M : Machine Bool Λ) (init_cfg : Cf
     · -- 3(b): movement constraint between indices
       intro i hi h_lt
       simp only [change_indices, Set.mem_setOf] at hi
-      exact sequence_k_movement_constraint M init_cfg i t h_lt hi ht
+      -- Need to provide all the required arguments for sequence_k_movement_constraint
+      have h_cont_i : ¬is_terminal M (steps M i init_cfg) := by
+        sorry  -- if sequence changes at i, machine hasn't terminated
+      have h_cont_t : ¬is_terminal M (steps M t init_cfg) := h_cont
+      -- Get the k values for indices i and t
+      have h_change_i : sequence M init_cfg i ≠ sequence M init_cfg (i + 1) := by
+        exact fun h => hi h.symm
+      obtain ⟨ki, hki_def, hki_eq⟩ := BinaryStepSequences.sequence_k_equals_position M init_cfg i h_cont_i h_change_i
+      obtain ⟨kt, hkt_def, hkt_eq⟩ := BinaryStepSequences.sequence_k_equals_position M init_cfg t h_cont h_change
+      -- Now apply the movement constraint
+      have h_constraint := BinaryStepSequences.sequence_k_movement_constraint M init_cfg i t h_lt h_cont_i h_cont_t ki kt hki_def hkt_def
+      -- Convert to the required form
+      use ki, kt
+      -- h_constraint gives us: ki ≤ kt + (t - i) ∧ kt ≤ ki + (t - i)
+      -- We need: (kt : ℤ) - ki ≤ t - i ∧ ki - kt ≤ t - i
+      refine ⟨hki_def, hkt_def, ?_, ?_⟩
+      · -- (kt : ℤ) - ki ≤ t - i
+        have h1 := h_constraint.2  -- kt ≤ ki + (t - i)
+        -- This means kt - ki ≤ t - i
+        have : (kt : ℤ) - (ki : ℤ) ≤ (t : ℤ) - (i : ℤ) := by
+          simp
+          omega
+        exact this
+      · -- ki - kt ≤ t - i  
+        have h2 := h_constraint.1  -- ki ≤ kt + (t - i)
+        -- This means ki - kt ≤ t - i
+        -- For natural numbers, if ki ≤ kt + (t - i), then ki - kt ≤ t - i
+        -- (with natural subtraction, this is 0 if kt > ki)
+        by_cases h : ki ≤ kt
+        · -- If ki ≤ kt, then ki - kt = 0 ≤ t - i
+          have : ki - kt = 0 := Nat.sub_eq_zero_of_le h
+          rw [this]
+          omega
+        · -- If kt < ki, then we can subtract
+          push_neg at h
+          have : kt < ki := h
+          -- From h2: ki ≤ kt + (t - i)
+          -- So ki - kt ≤ (kt + (t - i)) - kt = t - i
+          omega
 
 -- Growth Bounds for Binary Step Sequences
 

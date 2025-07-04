@@ -6,6 +6,10 @@ import TMTapeToNumber.LeftwardEncoding.Properties
 import TMTapeToNumber.LeftwardSequences.Basic
 import TMTapeToNumber.LeftwardSequences.Theorems
 import TMTapeToNumber.BinaryStepSequences.Basic
+import TMTapeToNumber.BinaryStepSequences.EncodingDifference
+import TMTapeToNumber.BinaryStepSequences.EncodingProperties
+import TMTapeToNumber.BinaryStepSequences.SequenceProperties
+import TMTapeToNumber.BinaryStepSequences.Lemmas
 import TMTapeToNumber.BinaryStepSequences.Theorems
 import TMTapeToNumber.Examples.PowersOfTwo
 
