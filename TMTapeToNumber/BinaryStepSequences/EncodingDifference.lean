@@ -39,14 +39,41 @@ lemma encode_strict_decrease_write_false (tape : LeftwardTape Bool)
     (h_pos : tape.head_pos ≤ 0)
     (h_true : tape.nth 0 = true) :
     (tape.write false).encode < tape.encode := by
-  sorry
+  -- Key insight: writing false at a position with true removes 2^|pos| from the sum
+  -- tape.encode = sum over positions with true including tape.head_pos
+  -- (tape.write false).encode = sum over same positions except tape.head_pos
+  
+  -- The encoding is the sum over true positions
+  -- Writing false at head_pos (which has true) removes that position's contribution
+  have h_contribution : tape.encode = (tape.write false).encode + 2^(Int.natAbs (-tape.head_pos)) := by
+    sorry
+  
+  -- Since 2^n > 0 for any n, we have strict inequality  
+  rw [h_contribution]
+  have : 0 < 2^(Int.natAbs (-tape.head_pos)) := by
+    apply Nat.pow_pos
+    norm_num
+  linarith
 
 /-- Writing true over false strictly increases the encoding -/
 lemma encode_strict_increase_write_true (tape : LeftwardTape Bool)
     (h_pos : tape.head_pos ≤ 0)
     (h_false : tape.nth 0 = false) :
     tape.encode < (tape.write true).encode := by
-  sorry
+  -- Key insight: writing true at a position with false adds 2^|pos| to the sum
+  -- tape.encode = sum over positions with true (not including tape.head_pos)
+  -- (tape.write true).encode = sum over same positions plus tape.head_pos
+  
+  -- The encoding increases by exactly 2^|head_pos|
+  have h_contribution : (tape.write true).encode = tape.encode + 2^(Int.natAbs (-tape.head_pos)) := by
+    sorry
+  
+  -- Since 2^n > 0 for any n, we have strict inequality
+  rw [h_contribution]
+  have : 0 < 2^(Int.natAbs (-tape.head_pos)) := by
+    apply Nat.pow_pos
+    norm_num
+  linarith
 
 /-- Writing false over true decreases the encoding -/
 lemma encode_decrease_write_false_over_true (cfg : Cfg Bool Λ)

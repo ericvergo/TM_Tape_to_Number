@@ -25,15 +25,11 @@ variable {Λ : Type*} [Inhabited Λ]
 
 open Turing LeftTM0 LeftwardTape
 
-/-- Integer difference between consecutive sequence values -/
+/-- Integer difference between consecutive sequence values.
+    This captures both increases and decreases in the sequence,
+    unlike natural subtraction which truncates to 0. -/
 noncomputable def sequence_diff (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) : ℤ :=
   (sequence M init_cfg (t + 1) : ℤ) - (sequence M init_cfg t : ℤ)
-
-/-- One step of a TM changes the encoding by 0 or ±2^k -/
-lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
-    let diff := sequence_diff M init_cfg t
-    diff = 0 ∨ ∃ k : ℕ, diff = 2^k ∨ diff = -(2^k : ℤ) := by
-  sorry
 
 /-- Helper: The encoding change from step_or_stay matches the head position -/
 lemma encode_change_from_step (M : Machine Bool Λ) (cfg : Cfg Bool Λ)
@@ -41,7 +37,56 @@ lemma encode_change_from_step (M : Machine Bool Λ) (cfg : Cfg Bool Λ)
     let cfg' := step_or_stay M cfg
     let diff := encode_diff cfg cfg'
     diff = 0 ∨ ∃ k : ℕ, diff = 2^k ∨ diff = -(2^k : ℤ) := by
-  sorry
+  -- Since not terminal, step returns some cfg'
+  have h_step : ∃ cfg'', step M cfg = some cfg'' := by
+    by_contra h_none
+    push_neg at h_none
+    -- h_none says: for all cfg'', step M cfg ≠ some cfg''
+    -- This means step M cfg = none
+    have h_terminal : step M cfg = none := by
+      cases h : step M cfg
+      case none => rfl
+      case some cfg'' =>
+        have : step M cfg ≠ some cfg'' := h_none cfg''
+        rw [h] at this
+        contradiction
+    -- But is_terminal M cfg means step M cfg = none
+    have : is_terminal M cfg := h_terminal
+    exact h_cont this
+  obtain ⟨cfg'', h_cfg''⟩ := h_step
+  
+  -- step_or_stay returns the stepped config
+  have h_cfg' : step_or_stay M cfg = cfg'' := by
+    unfold step_or_stay
+    rw [h_cfg'']
+  
+  -- The only way encoding changes is through a write operation
+  -- Movement operations preserve encoding
+  sorry -- This requires analyzing the step function in detail
+
+/-- One step of a TM changes the encoding by 0 or ±2^k -/
+lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
+    let diff := sequence_diff M init_cfg t
+    diff = 0 ∨ ∃ k : ℕ, diff = 2^k ∨ diff = -(2^k : ℤ) := by
+  unfold sequence_diff sequence
+  -- sequence (t+1) = encode (steps (t+1))
+  -- steps (t+1) = step_or_stay (steps t)
+  rw [steps_succ]
+  
+  -- Check if machine is terminal at time t
+  by_cases h_term : is_terminal M (steps M t init_cfg)
+  case pos =>
+    -- Terminal: step_or_stay keeps same config
+    have h_same : step_or_stay M (steps M t init_cfg) = steps M t init_cfg := by
+      unfold step_or_stay
+      unfold is_terminal at h_term
+      rw [h_term]
+    rw [h_same]
+    left
+    simp
+  case neg =>
+    -- Not terminal: use encode_change_from_step
+    exact encode_change_from_step M (steps M t init_cfg) h_term
 
 /-- The k value in a sequence change equals the absolute position where the write occurred -/
 lemma sequence_k_equals_position (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ)
@@ -49,7 +94,25 @@ lemma sequence_k_equals_position (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) 
     (h_change : sequence M init_cfg t ≠ sequence M init_cfg (t + 1)) :
     ∃ k : ℕ, (sequence_diff M init_cfg t = 2^k ∨ sequence_diff M init_cfg t = -(2^k : ℤ)) ∧
               k = Int.natAbs (-(steps M t init_cfg).tape.head_pos) := by
-  sorry
+  -- From sequence_diff_is_power_of_two, we know diff is 0 or ±2^k
+  have h_pow := sequence_diff_is_power_of_two M init_cfg t
+  cases h_pow
+  case inl h_zero =>
+    -- If diff = 0, sequence doesn't change
+    have : sequence M init_cfg t = sequence M init_cfg (t + 1) := by
+      unfold sequence_diff at h_zero
+      have : (sequence M init_cfg (t + 1) : ℤ) = (sequence M init_cfg t : ℤ) := by
+        linarith
+      exact Nat.cast_injective this.symm
+    exact absurd this h_change
+  case inr h_k =>
+    obtain ⟨k, h_k_val⟩ := h_k
+    use k
+    constructor
+    · exact h_k_val
+    · -- Need to show k = |head_pos|
+      -- This requires analyzing how encode_diff_at_write works
+      sorry -- This connects the encoding change to the head position
 
 /-- Movement constraint between k values -/
 lemma sequence_k_movement_constraint (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (i j : ℕ)
@@ -60,7 +123,25 @@ lemma sequence_k_movement_constraint (M : Machine Bool Λ) (init_cfg : Cfg Bool 
     (h_ki : sequence_diff M init_cfg i = 2^ki ∨ sequence_diff M init_cfg i = -(2^ki : ℤ))
     (h_kj : sequence_diff M init_cfg j = 2^kj ∨ sequence_diff M init_cfg j = -(2^kj : ℤ)) :
     ki ≤ kj + (j - i) ∧ kj ≤ ki + (j - i) := by
-  sorry
+  -- The head can move at most 1 position per step
+  -- So in (j - i) steps, the absolute position can change by at most (j - i)
+  -- k represents |head_pos|, so the constraint follows from movement bounds
+  sorry -- This requires tracking head position changes over multiple steps
+
+/-- If the sequence changes at time t, then the machine hasn't terminated -/
+lemma sequence_change_implies_not_terminal (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ)
+    (h_change : sequence M init_cfg t ≠ sequence M init_cfg (t + 1)) :
+    ¬is_terminal M (steps M t init_cfg) := by
+  intro h_terminal
+  -- If terminal, then step_or_stay keeps the same config
+  have h_stay : step_or_stay M (steps M t init_cfg) = steps M t init_cfg := by
+    unfold step_or_stay
+    rw [h_terminal]
+  -- But sequence changes, which contradicts
+  have h_eq : sequence M init_cfg (t + 1) = sequence M init_cfg t := by
+    unfold sequence
+    rw [steps_succ, h_stay]
+  exact h_change h_eq.symm
 
 end BinaryStepSequences
 

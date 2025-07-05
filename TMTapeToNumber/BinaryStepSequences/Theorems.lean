@@ -44,7 +44,7 @@ theorem tm_sequence_is_binary_step_sequence (M : Machine Bool Λ) (init_cfg : Cf
       exact fun h => ht h.symm
     -- Need to show the machine hasn't terminated
     have h_cont : ¬is_terminal M (steps M t init_cfg) := by
-      sorry  -- This needs to be proven: if sequence changes, machine hasn't terminated
+      exact BinaryStepSequences.sequence_change_implies_not_terminal M init_cfg t h_change
     constructor
     · -- 3(a): k_t ≤ t
       obtain ⟨k, hk_def, hk_eq⟩ := BinaryStepSequences.sequence_k_equals_position M init_cfg t h_cont h_change
@@ -71,12 +71,12 @@ theorem tm_sequence_is_binary_step_sequence (M : Machine Bool Λ) (init_cfg : Cf
       intro i hi h_lt
       simp only [change_indices, Set.mem_setOf] at hi
       -- Need to provide all the required arguments for sequence_k_movement_constraint
-      have h_cont_i : ¬is_terminal M (steps M i init_cfg) := by
-        sorry  -- if sequence changes at i, machine hasn't terminated
-      have h_cont_t : ¬is_terminal M (steps M t init_cfg) := h_cont
       -- Get the k values for indices i and t
       have h_change_i : sequence M init_cfg i ≠ sequence M init_cfg (i + 1) := by
         exact fun h => hi h.symm
+      have h_cont_i : ¬is_terminal M (steps M i init_cfg) := by
+        exact BinaryStepSequences.sequence_change_implies_not_terminal M init_cfg i h_change_i
+      have h_cont_t : ¬is_terminal M (steps M t init_cfg) := h_cont
       obtain ⟨ki, hki_def, hki_eq⟩ := BinaryStepSequences.sequence_k_equals_position M init_cfg i h_cont_i h_change_i
       obtain ⟨kt, hkt_def, hkt_eq⟩ := BinaryStepSequences.sequence_k_equals_position M init_cfg t h_cont h_change
       -- Now apply the movement constraint

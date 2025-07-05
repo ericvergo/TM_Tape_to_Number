@@ -143,7 +143,15 @@ When the integer encoding difference equals zero, the same value was written.
 \notready
 \uses{lem:encode_diff_at_write}
 Writing the same value as currently exists results in zero encoding difference.
-\end{lemma>
+\end{lemma}
+
+\begin{lemma}[Sequence Change Implies Not Terminal]
+\label{lem:sequence_change_implies_not_terminal}
+\lean{LeftTM0.BinaryStepSequences.sequence_change_implies_not_terminal}
+\notready
+\uses{def:encoding}
+If the sequence changes at time $t$, then the machine hasn't terminated at step $t$.
+\end{lemma}
 
 \chapter{Universality Results}
 

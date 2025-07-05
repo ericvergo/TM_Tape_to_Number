@@ -23,7 +23,9 @@ variable {Λ : Type*} [Inhabited Λ]
 
 open Turing LeftTM0 LeftwardTape
 
-/-- The witness k value when writing changes the encoding -/
+/-- The witness k value when writing changes the encoding.
+    This is the absolute value of the head position, which determines
+    the power of 2 by which the encoding changes. -/
 def write_witness (cfg : Cfg Bool Λ) : ℕ :=
   Int.natAbs (-cfg.tape.head_pos)
 
@@ -107,7 +109,7 @@ lemma encode_same_value_zero_diff (cfg : Cfg Bool Λ) (a : Bool)
   simp only [encode_config]
   -- When we write the same value, the encoding stays the same
   have h_eq : (cfg.tape.write a).encode = cfg.tape.encode := by
-    sorry -- This requires showing that writing the same value preserves encoding
+    sorry -- This requires careful analysis of how write affects the encoding
   rw [h_eq]
   simp
 

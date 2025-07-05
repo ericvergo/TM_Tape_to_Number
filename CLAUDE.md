@@ -276,3 +276,11 @@ lean_file_contents(declaration_file_path)
 ```
 
 Remember: MCP tools give instant feedback without the overhead of full compilation, making the proof development cycle much faster!
+
+# REPOSITORY MAINTENANCE
+Keep the repository clean and focused:
+- Remove completed refactoring documentation after changes are merged
+- Delete backup files (.bak) and test files  
+- Clean up old build outputs
+- Keep only essential documentation (README, PROJECT_STATUS, CLAUDE.md)
+- Ensure all content is either in active use or preserved in version control history
