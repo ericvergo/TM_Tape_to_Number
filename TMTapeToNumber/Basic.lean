@@ -11,6 +11,5 @@ import TMTapeToNumber.BinaryStepSequences.EncodingProperties
 import TMTapeToNumber.BinaryStepSequences.SequenceProperties
 import TMTapeToNumber.BinaryStepSequences.Lemmas
 import TMTapeToNumber.BinaryStepSequences.Theorems
-import TMTapeToNumber.Examples.PowersOfTwo
 
 -- This file serves as the main entry point, importing all modules

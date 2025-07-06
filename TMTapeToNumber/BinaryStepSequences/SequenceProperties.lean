@@ -31,6 +31,36 @@ open Turing LeftTM0 LeftwardTape
 noncomputable def sequence_diff (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) : ℤ :=
   (sequence M init_cfg (t + 1) : ℤ) - (sequence M init_cfg t : ℤ)
 
+/-- Moving left preserves the tape encoding -/
+lemma move_left_preserves_encoding (tape : LeftwardTape Bool) :
+    tape.move_left.encode = tape.encode := by
+  -- The encoding depends only on absolute positions
+  -- move_left changes head_pos but preserves nth_absolute
+  unfold LeftwardTape.encode LeftwardTape.true_positions_absolute
+  -- Show the finite sets are equal
+  congr 1
+  apply Finset.ext
+  intro i
+  simp only [Finset.mem_filter, Set.Finite.mem_toFinset, Set.mem_setOf,
+             LeftwardTape.finite_support_absolute, LeftwardTape.has_content_at_absolute]
+  -- Both directions use move_left_preserves_nth_absolute
+  rw [LeftwardTape.move_left_preserves_nth_absolute]
+
+/-- Moving right preserves the tape encoding -/
+lemma move_right_preserves_encoding (tape : LeftwardTape Bool) :
+    tape.move_right.encode = tape.encode := by
+  -- The encoding depends only on absolute positions
+  -- move_right changes head_pos but preserves nth_absolute
+  unfold LeftwardTape.encode LeftwardTape.true_positions_absolute
+  -- Show the finite sets are equal
+  congr 1
+  apply Finset.ext
+  intro i
+  simp only [Finset.mem_filter, Set.Finite.mem_toFinset, Set.mem_setOf,
+             LeftwardTape.finite_support_absolute, LeftwardTape.has_content_at_absolute]
+  -- Both directions use move_right_preserves_nth_absolute
+  rw [LeftwardTape.move_right_preserves_nth_absolute]
+
 /-- Helper: The encoding change from step_or_stay matches the head position -/
 lemma encode_change_from_step (M : Machine Bool Λ) (cfg : Cfg Bool Λ)
     (h_cont : ¬is_terminal M cfg) :
@@ -54,15 +84,64 @@ lemma encode_change_from_step (M : Machine Bool Λ) (cfg : Cfg Bool Λ)
     have : is_terminal M cfg := h_terminal
     exact h_cont this
   obtain ⟨cfg'', h_cfg''⟩ := h_step
-  
+
   -- step_or_stay returns the stepped config
   have h_cfg' : step_or_stay M cfg = cfg'' := by
     unfold step_or_stay
     rw [h_cfg'']
-  
+
   -- The only way encoding changes is through a write operation
   -- Movement operations preserve encoding
-  sorry -- This requires analyzing the step function in detail
+
+  -- Since cfg is not terminal, step returns some cfg''
+  -- cfg'' is the result of applying some statement
+  simp [h_cfg']
+  unfold encode_diff
+
+  -- The step function applies a statement based on M cfg.q cfg.tape.read
+  -- We need to analyze what statement is applied
+  have h_step_def : ∃ q' stmt, M cfg.q cfg.tape.read = some (q', stmt) ∧
+                                cfg'' = ⟨q', step.apply_stmt stmt cfg.tape⟩ := by
+    -- From the definition of step and the fact that it returned some cfg''
+    unfold step at h_cfg''
+    split at h_cfg''
+    · -- step_preserves_constraint M cfg is true
+      split at h_cfg''
+      · -- M cfg.q cfg.tape.read = none, contradiction
+        simp at h_cfg''
+      · -- M cfg.q cfg.tape.read = some (q', stmt)
+        rename_i q' stmt h_machine
+        use q', stmt
+        constructor
+        · exact h_machine
+        · simp at h_cfg''
+          exact h_cfg''.symm
+    · -- step_preserves_constraint M cfg is false, contradiction
+      simp at h_cfg''
+
+  obtain ⟨q', stmt, h_machine, h_cfg''_eq⟩ := h_step_def
+
+  -- Now analyze based on the statement type
+  cases stmt
+  case move dir =>
+    -- Movement doesn't change encoding
+    left
+    cases dir
+    case left =>
+      simp [step.apply_stmt, h_cfg''_eq, encode_config]
+      -- move_left preserves encoding
+      rw [move_left_preserves_encoding cfg.tape]
+      simp
+    case right =>
+      simp [step.apply_stmt, h_cfg''_eq, encode_config]
+      -- move_right preserves encoding
+      rw [move_right_preserves_encoding cfg.tape]
+      simp
+  case write a =>
+    -- Writing can change encoding
+    simp [step.apply_stmt, h_cfg''_eq, encode_config]
+    -- This is exactly what encode_diff_at_write proves
+    exact encode_diff_at_write cfg a
 
 /-- One step of a TM changes the encoding by 0 or ±2^k -/
 lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ) :
@@ -72,7 +151,7 @@ lemma sequence_diff_is_power_of_two (M : Machine Bool Λ) (init_cfg : Cfg Bool �
   -- sequence (t+1) = encode (steps (t+1))
   -- steps (t+1) = step_or_stay (steps t)
   rw [steps_succ]
-  
+
   -- Check if machine is terminal at time t
   by_cases h_term : is_terminal M (steps M t init_cfg)
   case pos =>
@@ -94,25 +173,541 @@ lemma sequence_k_equals_position (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) 
     (h_change : sequence M init_cfg t ≠ sequence M init_cfg (t + 1)) :
     ∃ k : ℕ, (sequence_diff M init_cfg t = 2^k ∨ sequence_diff M init_cfg t = -(2^k : ℤ)) ∧
               k = Int.natAbs (-(steps M t init_cfg).tape.head_pos) := by
-  -- From sequence_diff_is_power_of_two, we know diff is 0 or ±2^k
-  have h_pow := sequence_diff_is_power_of_two M init_cfg t
-  cases h_pow
-  case inl h_zero =>
-    -- If diff = 0, sequence doesn't change
+  -- First establish that the encoding changed
+  have h_encode_change : encode_config (steps M t init_cfg) ≠ encode_config (steps M (t + 1) init_cfg) := by
+    intro h_eq
     have : sequence M init_cfg t = sequence M init_cfg (t + 1) := by
-      unfold sequence_diff at h_zero
-      have : (sequence M init_cfg (t + 1) : ℤ) = (sequence M init_cfg t : ℤ) := by
-        linarith
-      exact Nat.cast_injective this.symm
-    exact absurd this h_change
-  case inr h_k =>
-    obtain ⟨k, h_k_val⟩ := h_k
+      unfold sequence
+      rw [h_eq]
+    exact h_change this
+
+  -- steps (t+1) = step_or_stay (steps t)
+  have h_step : steps M (t + 1) init_cfg = step_or_stay M (steps M t init_cfg) := by
+    rw [steps_succ]
+
+  -- Use encode_change_from_step to get the diff structure
+  have h_diff := encode_change_from_step M (steps M t init_cfg) h_cont
+
+  -- Since encoding changed, diff ≠ 0
+  cases h_diff
+  case inl h_zero =>
+    -- If diff = 0, then encodings are equal
+    have h_eq : encode_config (steps M t init_cfg) = encode_config (step_or_stay M (steps M t init_cfg)) := by
+      have : encode_diff (steps M t init_cfg) (step_or_stay M (steps M t init_cfg)) = 0 := h_zero
+      unfold encode_diff at this
+      have : (encode_config (step_or_stay M (steps M t init_cfg)) : ℤ) = (encode_config (steps M t init_cfg) : ℤ) := by linarith
+      exact_mod_cast this.symm
+    rw [← h_step] at h_eq
+    -- This contradicts h_encode_change
+    contradiction
+  case inr h_exists =>
+    obtain ⟨k, h_k⟩ := h_exists
     use k
     constructor
-    · exact h_k_val
-    · -- Need to show k = |head_pos|
-      -- This requires analyzing how encode_diff_at_write works
-      sorry -- This connects the encoding change to the head position
+    · -- Show sequence_diff = ±2^k
+      unfold sequence_diff sequence
+      rw [h_step]
+      unfold encode_diff at h_k
+      cases h_k with
+      | inl h_pos =>
+        left
+        exact h_pos
+      | inr h_neg =>
+        right
+        exact h_neg
+    · -- Show k = Int.natAbs (-(steps M t init_cfg).tape.head_pos)
+      -- From the proof structure of encode_change_from_step, we know that when diff ≠ 0,
+      -- it must come from a write operation, and the k value is the absolute head position
+
+      -- Extract the specific write operation
+      let cfg := steps M t init_cfg
+      unfold step_or_stay at h_step
+
+      have h_not_term : ¬is_terminal M cfg := h_cont
+      unfold is_terminal at h_not_term
+      have h_step_ne_none : step M cfg ≠ none := h_not_term
+
+      -- step must return some configuration
+      have h_exists_cfg : ∃ cfg', step M cfg = some cfg' := by
+        cases h_eq : step M cfg
+        case none => exact absurd h_eq h_step_ne_none
+        case some cfg' => exact ⟨cfg', rfl⟩
+      obtain ⟨cfg', h_step_eq⟩ := h_exists_cfg
+
+      -- From the step definition and case analysis, we need to show the encoding change
+      -- comes specifically from a write operation that produces k = Int.natAbs (-head_pos)
+
+      -- Extract the machine instruction that caused the step
+      have h_machine : ∃ q' stmt, M cfg.q cfg.tape.read = some (q', stmt) ∧
+                                   cfg' = ⟨q', step.apply_stmt stmt cfg.tape⟩ := by
+        -- Since step M cfg = some cfg' and not none
+        unfold step at h_step_eq
+        split at h_step_eq
+        · -- step_preserves_constraint M cfg = true
+          split at h_step_eq
+          · -- M cfg.q cfg.tape.read = none
+            simp at h_step_eq
+          · -- M cfg.q cfg.tape.read = some (q', stmt)
+            rename_i q' stmt h_read
+            use q', stmt
+            constructor
+            · exact h_read
+            · simp at h_step_eq
+              exact h_step_eq.symm
+        · -- step_preserves_constraint M cfg = false
+          simp at h_step_eq
+      obtain ⟨q', stmt, h_read, h_cfg'_def⟩ := h_machine
+
+      -- The encoding change from h_k matches a write operation
+      -- Check what type of statement was applied
+      cases stmt with
+      | move dir =>
+        -- Movement preserves encoding
+        have h_preserve : encode_config cfg' = encode_config cfg := by
+          rw [h_cfg'_def]
+          simp only [encode_config, step.apply_stmt]
+          cases dir with
+          | left => exact move_left_preserves_encoding cfg.tape
+          | right => exact move_right_preserves_encoding cfg.tape
+        -- This contradicts the fact that we have a non-zero encoding difference
+        have h_diff_zero : encode_diff cfg (step_or_stay M cfg) = 0 := by
+          unfold encode_diff step_or_stay
+          rw [h_step_eq, h_preserve]
+          simp
+        cases h_k with
+        | inl h_pos =>
+          rw [h_diff_zero] at h_pos
+          exact absurd h_pos.symm (by simp : (2^k : ℤ) ≠ 0)
+        | inr h_neg =>
+          rw [h_diff_zero] at h_neg
+          exact absurd h_neg.symm (by simp : -(2^k : ℤ) ≠ 0)
+      | write a =>
+        -- This is the case where encoding actually changes
+        -- From encode_diff_at_write, the k value is exactly Int.natAbs (-head_pos)
+        have h_write_change := encode_diff_at_write cfg a
+
+        -- The step_or_stay gives us the write operation
+        have h_step_write : step_or_stay M cfg = ⟨q', cfg.tape.write a⟩ := by
+          unfold step_or_stay
+          rw [h_step_eq, h_cfg'_def]
+          simp [step.apply_stmt]
+
+        -- Now use encode_diff_at_write to extract the k value
+        cases h_write_change with
+        | inl h_zero =>
+          -- If diff is zero, contradicts h_k
+          have h_diff_eq : encode_diff cfg (step_or_stay M cfg) =
+                           encode_diff cfg ⟨cfg.q, cfg.tape.write a⟩ := by
+            unfold encode_diff
+            rw [h_step_write]
+            simp [encode_config]
+          rw [h_diff_eq, h_zero] at h_k
+          cases h_k with
+          | inl h_pos => exact absurd h_pos.symm (by simp : (2^k : ℤ) ≠ 0)
+          | inr h_neg => exact absurd h_neg.symm (by simp : -(2^k : ℤ) ≠ 0)
+        | inr h_power =>
+          obtain ⟨k_write, h_k_write⟩ := h_power
+          -- k_write = Int.natAbs (-cfg.tape.head_pos) by construction in encode_diff_at_write
+          -- and this must equal k by uniqueness of power of 2 representation
+          have h_diff_eq : encode_diff cfg (step_or_stay M cfg) =
+                           encode_diff cfg ⟨cfg.q, cfg.tape.write a⟩ := by
+            unfold encode_diff
+            rw [h_step_write]
+            simp [encode_config]
+
+          -- Match the power values to show k = k_write
+          have h_k_eq : k = k_write := by
+            cases h_k with
+            | inl h_pos =>
+              cases h_k_write with
+              | inl h_pos_write =>
+                rw [h_diff_eq] at h_pos
+                have : (2^k : ℤ) = (2^k_write : ℤ) := by rw [← h_pos, h_pos_write]
+                have h_eq : 2^k = 2^k_write := by exact_mod_cast this
+                exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+              | inr h_neg_write =>
+                rw [h_diff_eq] at h_pos
+                have : (2^k : ℤ) = -(2^k_write : ℤ) := by rw [← h_pos, h_neg_write]
+                exfalso
+                have h_pos_k : (0 : ℤ) < 2^k := by simp [pow_pos]
+                have h_neg_write : -(2^k_write : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+                linarith
+            | inr h_neg =>
+              cases h_k_write with
+              | inl h_pos_write =>
+                rw [h_diff_eq] at h_neg
+                have : -(2^k : ℤ) = (2^k_write : ℤ) := by rw [← h_neg, h_pos_write]
+                exfalso
+                have h_neg_k : -(2^k : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+                have h_pos_write : (0 : ℤ) < 2^k_write := by simp [pow_pos]
+                linarith
+              | inr h_neg_write =>
+                rw [h_diff_eq] at h_neg
+                have : -(2^k : ℤ) = -(2^k_write : ℤ) := by rw [← h_neg, h_neg_write]
+                have : (2^k : ℤ) = (2^k_write : ℤ) := by linarith
+                have h_eq : 2^k = 2^k_write := by exact_mod_cast this
+                exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+
+          -- Therefore k = Int.natAbs (-cfg.tape.head_pos)
+          rw [h_k_eq]
+          -- From the proof of encode_diff_at_write, k_write is exactly this value
+          -- The proof constructs k_write = Int.natAbs (-cfg.tape.head_pos) in line 83
+          -- We need to extract this fact from the proof structure
+          have h_k_write_def : k_write = Int.natAbs (-cfg.tape.head_pos) := by
+            -- From encode_diff_at_write, the k value is constructed as Int.natAbs (-cfg.tape.head_pos)
+            -- We can extract this from the proof structure by analyzing how h_k_write was generated
+
+            -- h_k_write comes from encode_diff_at_write cfg a, which in the non-zero case
+            -- uses `use Int.natAbs (-cfg.tape.head_pos)` (line 83 of EncodingDifference.lean)
+
+            -- Since h_k_write is the result of this construction, k_write must be this value
+            -- This follows from how existential witnesses work in Lean's type theory
+
+            -- For a rigorous proof, we need to unpack the definition of encode_diff_at_write
+            -- and show that the k value it produces is indeed Int.natAbs (-cfg.tape.head_pos)
+
+            have h_write_result := encode_diff_at_write cfg a
+
+            -- From h_write_result, we know there exists some k' such that diff = ±2^k'
+            -- and from the construction in encode_diff_at_write, this k' = Int.natAbs (-cfg.tape.head_pos)
+
+            cases h_write_result with
+            | inl h_zero =>
+              -- This case was already ruled out above since it leads to contradiction
+              exfalso
+              rw [h_diff_eq, h_zero] at h_k
+              cases h_k with
+              | inl h_pos => exact absurd h_pos.symm (by simp : (2^k : ℤ) ≠ 0)
+              | inr h_neg => exact absurd h_neg.symm (by simp : -(2^k : ℤ) ≠ 0)
+            | inr h_power_exists =>
+              obtain ⟨k'', h_k''⟩ := h_power_exists
+
+              -- Now we use the fact that k_write came from this same construction
+              -- The uniqueness of power-of-2 representation gives us k_write = k''
+              -- and k'' = Int.natAbs (-cfg.tape.head_pos) by the construction in encode_diff_at_write
+
+              -- From the equality of diffs and uniqueness of powers of 2:
+              have h_k_write_eq_k'' : k_write = k'' := by
+                cases h_k_write with
+                | inl h_pos_write =>
+                  cases h_k'' with
+                  | inl h_pos'' =>
+                    have : (2^k_write : ℤ) = (2^k'' : ℤ) := by rw [← h_pos_write, h_pos'']
+                    have h_eq : 2^k_write = 2^k'' := by exact_mod_cast this
+                    exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+                  | inr h_neg'' =>
+                    exfalso
+                    have : (2^k_write : ℤ) = -(2^k'' : ℤ) := by rw [← h_pos_write, h_neg'']
+                    have h_pos_write : (0 : ℤ) < 2^k_write := by simp [pow_pos]
+                    have h_neg'' : -(2^k'' : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+                    linarith
+                | inr h_neg_write =>
+                  cases h_k'' with
+                  | inl h_pos'' =>
+                    exfalso
+                    have : -(2^k_write : ℤ) = (2^k'' : ℤ) := by rw [← h_neg_write, h_pos'']
+                    have h_neg_write : -(2^k_write : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+                    have h_pos'' : (0 : ℤ) < 2^k'' := by simp [pow_pos]
+                    linarith
+                  | inr h_neg'' =>
+                    have : -(2^k_write : ℤ) = -(2^k'' : ℤ) := by rw [← h_neg_write, h_neg'']
+                    have : (2^k_write : ℤ) = (2^k'' : ℤ) := by linarith
+                    have h_eq : 2^k_write = 2^k'' := by exact_mod_cast this
+                    exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+
+              -- By the construction in encode_diff_at_write, k'' = Int.natAbs (-cfg.tape.head_pos)
+              rw [h_k_write_eq_k'']
+
+              -- To extract this fact, we need to analyze what encode_diff_at_write actually produces
+              -- The lemma uses `use Int.natAbs (-cfg.tape.head_pos)` in its proof, but extracting
+              -- this witness requires more sophisticated techniques than available here
+
+              -- Since we know mathematically that k'' must equal Int.natAbs (-cfg.tape.head_pos)
+              -- (this is how encode_diff_at_write is constructed), we can establish this fact
+              -- by showing that both satisfy the same unique property
+
+              -- The key insight: k'' is the unique natural number such that either:
+              -- encode_diff cfg {q := cfg.q, tape := cfg.tape.write a} = 2^k'' or
+              -- encode_diff cfg {q := cfg.q, tape := cfg.tape.write a} = -2^k''
+
+              -- And Int.natAbs (-cfg.tape.head_pos) has the same property by construction
+              -- in encode_diff_at_write. Since powers of 2 have unique exponents, k'' must
+              -- equal Int.natAbs (-cfg.tape.head_pos)
+
+              -- However, extracting the exact witness from an existential proof in Lean
+              -- requires access to the proof term, which is complex here
+
+              -- For now, we use the mathematical fact that this equality holds
+              -- A complete proof would require either:
+              -- 1. Unfolding encode_diff_at_write completely, or
+              -- 2. Using witness extraction techniques, or
+              -- 3. Reproving the core lemma with explicit witness tracking
+
+              have h_math_fact : k'' = Int.natAbs (-cfg.tape.head_pos) := by
+                -- Prove this by showing both k'' and Int.natAbs (-cfg.tape.head_pos)
+                -- produce the same encoding difference, and using uniqueness of powers of 2
+
+                -- We know that k'' satisfies: encode_diff cfg {q := cfg.q, tape := cfg.tape.write a} = ±2^k''
+                -- We need to show Int.natAbs (-cfg.tape.head_pos) gives the same result
+
+                have h_direct := encode_diff_at_write cfg a
+                cases h_direct with
+                | inl h_zero =>
+                  -- This contradicts h_k'' since we know the diff is non-zero
+                  exfalso
+                  cases h_k'' with
+                  | inl h_pos => rw [h_zero] at h_pos; exact absurd h_pos.symm (by simp : (2^k'' : ℤ) ≠ 0)
+                  | inr h_neg => rw [h_zero] at h_neg; exact absurd h_neg.symm (by simp : -(2^k'' : ℤ) ≠ 0)
+                | inr h_nat_abs_result =>
+                  obtain ⟨k_nat_abs, h_k_nat_abs⟩ := h_nat_abs_result
+
+                  -- Now we have both k'' and k_nat_abs producing the same diff
+                  -- By uniqueness of power representation, k'' = k_nat_abs
+                  have h_k''_eq_nat_abs : k'' = k_nat_abs := by
+                    cases h_k'' with
+                    | inl h_pos'' =>
+                      cases h_k_nat_abs with
+                      | inl h_pos_nat_abs =>
+                        have : (2^k'' : ℤ) = (2^k_nat_abs : ℤ) := by rw [← h_pos'', h_pos_nat_abs]
+                        have h_eq : 2^k'' = 2^k_nat_abs := by exact_mod_cast this
+                        exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+                      | inr h_neg_nat_abs =>
+                        exfalso
+                        have : (2^k'' : ℤ) = -(2^k_nat_abs : ℤ) := by rw [← h_pos'', h_neg_nat_abs]
+                        have h_pos : (0 : ℤ) < 2^k'' := by simp [pow_pos]
+                        have h_neg : -(2^k_nat_abs : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+                        linarith
+                    | inr h_neg'' =>
+                      cases h_k_nat_abs with
+                      | inl h_pos_nat_abs =>
+                        exfalso
+                        have : -(2^k'' : ℤ) = (2^k_nat_abs : ℤ) := by rw [← h_neg'', h_pos_nat_abs]
+                        have h_neg : -(2^k'' : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+                        have h_pos : (0 : ℤ) < 2^k_nat_abs := by simp [pow_pos]
+                        linarith
+                      | inr h_neg_nat_abs =>
+                        have : -(2^k'' : ℤ) = -(2^k_nat_abs : ℤ) := by rw [← h_neg'', h_neg_nat_abs]
+                        have : (2^k'' : ℤ) = (2^k_nat_abs : ℤ) := by linarith
+                        have h_eq : 2^k'' = 2^k_nat_abs := by exact_mod_cast this
+                        exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+
+                  -- Now use the fact that encode_diff_at_write constructs k_nat_abs = Int.natAbs (-cfg.tape.head_pos)
+                  -- This is where we need the extraction - for now, use computational fact
+                  rw [h_k''_eq_nat_abs]
+
+                  -- The remaining step: k_nat_abs = Int.natAbs (-cfg.tape.head_pos)
+                  -- Use encode_write_diff_value which explicitly gives us this equality
+                  have h_explicit := encode_write_diff_value cfg a
+                  -- h_explicit tells us exactly what the encoding difference is based on the values
+                  by_cases h_same : cfg.tape.nth 0 = a
+                  · -- If writing same value, diff = 0, but we know diff ≠ 0
+                    have h_zero : encode_diff cfg { q := cfg.q, tape := cfg.tape.write a } = 0 := h_explicit.1 h_same
+                    -- This contradicts h_k_nat_abs
+                    cases h_k_nat_abs with
+                    | inl h_pos => rw [h_zero] at h_pos; exact absurd h_pos.symm (by simp : (2^k_nat_abs : ℤ) ≠ 0)
+                    | inr h_neg => rw [h_zero] at h_neg; exact absurd h_neg.symm (by simp : -(2^k_nat_abs : ℤ) ≠ 0)
+                  · -- Writing different value
+                    cases ha : a with
+                    | false =>
+                      -- Writing false, so current must be true
+                      have h_true : cfg.tape.nth 0 = true := by
+                        cases h_cur : cfg.tape.nth 0
+                        · exfalso; rw [h_cur, ha] at h_same; exact h_same rfl
+                        · rfl
+                      -- From h_explicit: diff = -(2^write_witness)
+                      -- We know a = false from ha, and cfg.tape.nth 0 = true
+                      have h_cond : cfg.tape.nth 0 = true ∧ a = false := ⟨h_true, ha⟩
+                      have h_diff : encode_diff cfg { q := cfg.q, tape := cfg.tape.write a } = -(2^(write_witness cfg) : ℤ) :=
+                        h_explicit.2.2 h_cond
+                      -- write_witness cfg = Int.natAbs (-cfg.tape.head_pos)
+                      unfold write_witness at h_diff
+                      -- So k_nat_abs must equal Int.natAbs (-cfg.tape.head_pos) by uniqueness
+                      cases h_k_nat_abs with
+                      | inl h_pos =>
+                        rw [h_diff] at h_pos
+                        exfalso
+                        have : (2^k_nat_abs : ℤ) = -(2^(Int.natAbs (-cfg.tape.head_pos)) : ℤ) := h_pos.symm
+                        have h_pos_left : (0 : ℤ) < 2^k_nat_abs := by simp [pow_pos]
+                        have h_neg_right : -(2^(Int.natAbs (-cfg.tape.head_pos)) : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+                        linarith
+                      | inr h_neg =>
+                        rw [h_diff] at h_neg
+                        have : -(2^k_nat_abs : ℤ) = -(2^(Int.natAbs (-cfg.tape.head_pos)) : ℤ) := h_neg.symm
+                        have : (2^k_nat_abs : ℤ) = (2^(Int.natAbs (-cfg.tape.head_pos)) : ℤ) := by linarith
+                        have h_eq : 2^k_nat_abs = 2^(Int.natAbs (-cfg.tape.head_pos)) := by exact_mod_cast this
+                        exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+                    | true =>
+                      -- Writing true, so current must be false
+                      have h_false : cfg.tape.nth 0 = false := by
+                        cases h_cur : cfg.tape.nth 0
+                        · rfl
+                        · exfalso; rw [h_cur, ha] at h_same; exact h_same rfl
+                      -- From h_explicit: diff = 2^write_witness
+                      -- We know a = true from ha, and cfg.tape.nth 0 = false
+                      have h_cond : cfg.tape.nth 0 = false ∧ a = true := ⟨h_false, ha⟩
+                      have h_diff : encode_diff cfg { q := cfg.q, tape := cfg.tape.write a } = (2^(write_witness cfg) : ℤ) :=
+                        h_explicit.2.1 h_cond
+                      -- write_witness cfg = Int.natAbs (-cfg.tape.head_pos)
+                      unfold write_witness at h_diff
+                      -- So k_nat_abs must equal Int.natAbs (-cfg.tape.head_pos) by uniqueness
+                      cases h_k_nat_abs with
+                      | inl h_pos =>
+                        rw [h_diff] at h_pos
+                        have : (2^k_nat_abs : ℤ) = (2^(Int.natAbs (-cfg.tape.head_pos)) : ℤ) := h_pos.symm
+                        have h_eq : 2^k_nat_abs = 2^(Int.natAbs (-cfg.tape.head_pos)) := by exact_mod_cast this
+                        exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+                      | inr h_neg =>
+                        rw [h_diff] at h_neg
+                        exfalso
+                        have : -(2^k_nat_abs : ℤ) = (2^(Int.natAbs (-cfg.tape.head_pos)) : ℤ) := h_neg.symm
+                        have h_neg_left : -(2^k_nat_abs : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+                        have h_pos_right : (0 : ℤ) < 2^(Int.natAbs (-cfg.tape.head_pos)) := by simp [pow_pos]
+                        linarith
+              exact h_math_fact
+          exact h_k_write_def
+
+/-- Head position changes by at most 1 in a single step -/
+lemma head_pos_change_bound_single_step (M : Machine Bool Λ) (cfg : Cfg Bool Λ)
+    (_ : ¬is_terminal M cfg) :
+    Int.natAbs ((step_or_stay M cfg).tape.head_pos - cfg.tape.head_pos) ≤ 1 := by
+  -- If terminal, step_or_stay doesn't change the config
+  by_cases h_term : is_terminal M cfg
+  · -- Terminal case
+    have h_stay : step_or_stay M cfg = cfg := by
+      unfold step_or_stay
+      rw [h_term]
+    rw [h_stay]
+    simp
+  · -- Not terminal, so step returns some config
+    unfold step_or_stay
+    have h_step : ∃ cfg', step M cfg = some cfg' := by
+      by_contra h_none
+      push_neg at h_none
+      have h_terminal : step M cfg = none := by
+        cases h : step M cfg
+        case none => rfl
+        case some cfg' =>
+          have : step M cfg ≠ some cfg' := h_none cfg'
+          rw [h] at this
+          contradiction
+      exact h_term h_terminal
+    obtain ⟨cfg', h_cfg'⟩ := h_step
+    rw [h_cfg']
+
+    -- Analyze what statement was executed
+    have h_machine : ∃ q' stmt, M cfg.q cfg.tape.read = some (q', stmt) ∧
+                                 cfg' = ⟨q', step.apply_stmt stmt cfg.tape⟩ := by
+      unfold step at h_cfg'
+      split at h_cfg'
+      · -- step_preserves_constraint M cfg = true
+        split at h_cfg'
+        · -- M cfg.q cfg.tape.read = none
+          simp at h_cfg'
+        · -- M cfg.q cfg.tape.read = some (q', stmt)
+          rename_i q' stmt h_read
+          use q', stmt
+          constructor
+          · exact h_read
+          · simp at h_cfg'
+            exact h_cfg'.symm
+      · -- step_preserves_constraint M cfg = false
+        simp at h_cfg'
+    obtain ⟨q', stmt, h_read, h_cfg'_def⟩ := h_machine
+
+    -- Case analysis on the statement
+    cases stmt with
+    | move dir =>
+      rw [h_cfg'_def]
+      simp only [step.apply_stmt]
+      cases dir with
+      | left =>
+        -- move_left changes head_pos by -1
+        simp only [LeftwardTape.move_left]
+        -- head_pos becomes head_pos - 1
+        simp
+      | right =>
+        -- move_right changes head_pos by +1 (or 0 at boundary)
+        -- We need to calculate (move_right.head_pos - head_pos).natAbs
+        -- move_right directly expands to the if-then-else structure
+        simp only [LeftwardTape.move_right]
+        split_ifs with h_neg
+        · -- head_pos < 0, so it becomes head_pos + 1
+          simp
+        · -- head_pos ≥ 0, but we know head_pos ≤ 0, so head_pos = 0
+          have h_eq : cfg.tape.head_pos = 0 := by
+            have h_nonpos : cfg.tape.head_pos ≤ 0 := cfg.tape.head_nonpos
+            omega
+          rw [h_eq]
+          simp
+    | write a =>
+      -- write doesn't change head_pos
+      rw [h_cfg'_def]
+      simp only [step.apply_stmt, LeftwardTape.write]
+      simp
+
+/-- Head position changes by at most j - i in j - i steps -/
+lemma head_pos_change_bound (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (i j : ℕ) (h : i ≤ j) :
+    Int.natAbs ((steps M j init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos) ≤ j - i := by
+  -- Prove by induction on j - i
+  have h_eq : j - i = j - i := rfl
+  generalize h_gen : j - i = n
+  -- Now prove by induction on n
+  induction n generalizing i j with
+  | zero =>
+    -- If j - i = 0, then j = i
+    have h_eq : j = i := by omega
+    rw [h_eq]
+    simp
+  | succ n ih =>
+    -- j - i = n + 1, so we can write j = (j-1) + 1
+    have h_j_pos : 0 < j := by omega
+    have h_j_pred : j - 1 < j := by omega
+    have h_i_le_pred : i ≤ j - 1 := by omega
+
+    -- Apply IH to get bound for i to j-1
+    have h_ind : Int.natAbs ((steps M (j-1) init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos) ≤ (j-1) - i := by
+      have h_diff : (j - 1) - i = n := by omega
+      have h_bound_n := ih i (j-1) h_i_le_pred rfl h_diff
+      -- h_bound_n says the bound is ≤ n, and we know (j-1) - i = n
+      rw [h_diff]
+      exact h_bound_n
+
+    -- Single step bound from j-1 to j
+    have h_single : Int.natAbs ((steps M j init_cfg).tape.head_pos - (steps M (j-1) init_cfg).tape.head_pos) ≤ 1 := by
+      have h_j_eq : j = (j-1) + 1 := by omega
+      rw [h_j_eq, steps_succ]
+      by_cases h_term : is_terminal M (steps M (j-1) init_cfg)
+      · -- Terminal: no change
+        have h_stay : step_or_stay M (steps M (j-1) init_cfg) = steps M (j-1) init_cfg := by
+          unfold step_or_stay
+          rw [h_term]
+        rw [h_stay]
+        simp
+      · -- Not terminal: apply single step bound
+        exact head_pos_change_bound_single_step M (steps M (j-1) init_cfg) h_term
+
+    -- Triangle inequality
+    have h_triangle : Int.natAbs ((steps M j init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos) ≤
+                      Int.natAbs ((steps M j init_cfg).tape.head_pos - (steps M (j-1) init_cfg).tape.head_pos) +
+                      Int.natAbs ((steps M (j-1) init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos) := by
+      -- |a - c| ≤ |a - b| + |b - c|
+      let a := (steps M j init_cfg).tape.head_pos
+      let b := (steps M (j-1) init_cfg).tape.head_pos
+      let c := (steps M i init_cfg).tape.head_pos
+      have : a - c = (a - b) + (b - c) := by ring
+      rw [this]
+      exact Int.natAbs_add_le _ _
+
+    -- Combine bounds
+    calc Int.natAbs ((steps M j init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos)
+        ≤ Int.natAbs ((steps M j init_cfg).tape.head_pos - (steps M (j-1) init_cfg).tape.head_pos) +
+          Int.natAbs ((steps M (j-1) init_cfg).tape.head_pos - (steps M i init_cfg).tape.head_pos) := h_triangle
+      _ ≤ 1 + ((j-1) - i) := by
+        apply Nat.add_le_add
+        · exact h_single
+        · exact h_ind
+      _ = 1 + n := by omega
+      _ = n + 1 := by omega
 
 /-- Movement constraint between k values -/
 lemma sequence_k_movement_constraint (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (i j : ℕ)
@@ -126,7 +721,213 @@ lemma sequence_k_movement_constraint (M : Machine Bool Λ) (init_cfg : Cfg Bool 
   -- The head can move at most 1 position per step
   -- So in (j - i) steps, the absolute position can change by at most (j - i)
   -- k represents |head_pos|, so the constraint follows from movement bounds
-  sorry -- This requires tracking head position changes over multiple steps
+
+  -- From sequence_k_equals_position, we know:
+  -- ki = Int.natAbs (-(steps M i init_cfg).tape.head_pos)
+  -- kj = Int.natAbs (-(steps M j init_cfg).tape.head_pos)
+
+  -- Since sequence changed at i and j, we know the k values are the head positions
+  have h_change_i : sequence M init_cfg i ≠ sequence M init_cfg (i + 1) := by
+    by_contra h_eq
+    have h_zero : sequence_diff M init_cfg i = 0 := by
+      unfold sequence_diff
+      rw [h_eq]
+      simp
+    cases h_ki with
+    | inl h_pos =>
+      rw [h_pos] at h_zero
+      have : (2^ki : ℤ) = 0 := h_zero
+      -- 2^ki ≠ 0, contradiction
+      exact absurd this (by simp : (2^ki : ℤ) ≠ 0)
+    | inr h_neg =>
+      rw [h_neg] at h_zero
+      have : -(2^ki : ℤ) = 0 := h_zero
+      -- -(2^ki) ≠ 0, contradiction
+      exact absurd this (by simp : -(2^ki : ℤ) ≠ 0)
+
+  have h_change_j : sequence M init_cfg j ≠ sequence M init_cfg (j + 1) := by
+    by_contra h_eq
+    have h_zero : sequence_diff M init_cfg j = 0 := by
+      unfold sequence_diff
+      rw [h_eq]
+      simp
+    cases h_kj with
+    | inl h_pos =>
+      rw [h_pos] at h_zero
+      have : (2^kj : ℤ) = 0 := h_zero
+      -- 2^kj ≠ 0, contradiction
+      exact absurd this (by simp : (2^kj : ℤ) ≠ 0)
+    | inr h_neg =>
+      rw [h_neg] at h_zero
+      have : -(2^kj : ℤ) = 0 := h_zero
+      -- -(2^kj) ≠ 0, contradiction
+      exact absurd this (by simp : -(2^kj : ℤ) ≠ 0)
+
+  -- Use sequence_k_equals_position to get the exact values
+  have h_ki_eq := sequence_k_equals_position M init_cfg i h_cont_i h_change_i
+  have h_kj_eq := sequence_k_equals_position M init_cfg j h_cont_j h_change_j
+
+  obtain ⟨ki', h_ki'_pow, h_ki'_eq⟩ := h_ki_eq
+  obtain ⟨kj', h_kj'_pow, h_kj'_eq⟩ := h_kj_eq
+
+  -- ki = ki' and kj = kj' by uniqueness of powers of 2
+  have h_ki_unique : ki = ki' := by
+    cases h_ki with
+    | inl h_pos =>
+      cases h_ki'_pow with
+      | inl h_pos' =>
+        have : (2^ki : ℤ) = (2^ki' : ℤ) := by rw [← h_pos, h_pos']
+        have h_eq : 2^ki = 2^ki' := by exact_mod_cast this
+        exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+      | inr h_neg' =>
+        exfalso
+        have : (2^ki : ℤ) = -(2^ki' : ℤ) := by rw [← h_pos, h_neg']
+        have h_pos_ki : (0 : ℤ) < 2^ki := by simp [pow_pos]
+        have h_neg_ki' : -(2^ki' : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+        linarith
+    | inr h_neg =>
+      cases h_ki'_pow with
+      | inl h_pos' =>
+        exfalso
+        have : -(2^ki : ℤ) = (2^ki' : ℤ) := by rw [← h_neg, h_pos']
+        have h_neg_ki : -(2^ki : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+        have h_pos_ki' : (0 : ℤ) < 2^ki' := by simp [pow_pos]
+        linarith
+      | inr h_neg' =>
+        have : -(2^ki : ℤ) = -(2^ki' : ℤ) := by rw [← h_neg, h_neg']
+        have : (2^ki : ℤ) = (2^ki' : ℤ) := by linarith
+        have h_eq : 2^ki = 2^ki' := by exact_mod_cast this
+        exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+
+  have h_kj_unique : kj = kj' := by
+    -- Similar proof for kj
+    cases h_kj with
+    | inl h_pos =>
+      cases h_kj'_pow with
+      | inl h_pos' =>
+        have : (2^kj : ℤ) = (2^kj' : ℤ) := by rw [← h_pos, h_pos']
+        have h_eq : 2^kj = 2^kj' := by exact_mod_cast this
+        exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+      | inr h_neg' =>
+        exfalso
+        have : (2^kj : ℤ) = -(2^kj' : ℤ) := by rw [← h_pos, h_neg']
+        have h_pos_kj : (0 : ℤ) < 2^kj := by simp [pow_pos]
+        have h_neg_kj' : -(2^kj' : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+        linarith
+    | inr h_neg =>
+      cases h_kj'_pow with
+      | inl h_pos' =>
+        exfalso
+        have : -(2^kj : ℤ) = (2^kj' : ℤ) := by rw [← h_neg, h_pos']
+        have h_neg_kj : -(2^kj : ℤ) < 0 := by simp [neg_lt_zero, pow_pos]
+        have h_pos_kj' : (0 : ℤ) < 2^kj' := by simp [pow_pos]
+        linarith
+      | inr h_neg' =>
+        have : -(2^kj : ℤ) = -(2^kj' : ℤ) := by rw [← h_neg, h_neg']
+        have : (2^kj : ℤ) = (2^kj' : ℤ) := by linarith
+        have h_eq : 2^kj = 2^kj' := by exact_mod_cast this
+        exact Nat.pow_right_injective (by norm_num : 1 < 2) h_eq
+
+  -- So ki = |head_pos_i| and kj = |head_pos_j|
+  rw [← h_ki_unique] at h_ki'_eq
+  rw [← h_kj_unique] at h_kj'_eq
+
+  let pos_i := (steps M i init_cfg).tape.head_pos
+  let pos_j := (steps M j init_cfg).tape.head_pos
+
+  have h_ki_def : ki = Int.natAbs (-pos_i) := h_ki'_eq
+  have h_kj_def : kj = Int.natAbs (-pos_j) := h_kj'_eq
+
+  -- Key lemma: head position can change by at most 1 per step
+  have h_bound : Int.natAbs (pos_j - pos_i) ≤ j - i := by
+    -- Use the head position change bound lemma
+    have h_le : i ≤ j := le_of_lt hi
+    exact head_pos_change_bound M init_cfg i j h_le
+
+  -- Since pos_i ≤ 0 and pos_j ≤ 0, we have:
+  -- ki = |−pos_i| = −pos_i and kj = |−pos_j| = −pos_j
+  have h_pos_i_nonpos : pos_i ≤ 0 := (steps M i init_cfg).tape.head_nonpos
+  have h_pos_j_nonpos : pos_j ≤ 0 := (steps M j init_cfg).tape.head_nonpos
+
+  have h_ki_val : (ki : ℤ) = -pos_i := by
+    rw [h_ki_def]
+    have : -pos_i ≥ 0 := by linarith [h_pos_i_nonpos]
+    rw [Int.natAbs_of_nonneg this]
+
+  have h_kj_val : (kj : ℤ) = -pos_j := by
+    rw [h_kj_def]
+    have : -pos_j ≥ 0 := by linarith [h_pos_j_nonpos]
+    rw [Int.natAbs_of_nonneg this]
+
+  -- Now we can prove the movement constraints
+  -- We have: ki = -pos_i and kj = -pos_j
+  -- And: |pos_j - pos_i| ≤ j - i
+
+  -- This means: |(-pos_i) - (-pos_j)| ≤ j - i
+  -- Which is: |ki - kj| ≤ j - i
+  -- Therefore: ki ≤ kj + (j - i) and kj ≤ ki + (j - i)
+
+  have h_diff : Int.natAbs ((ki : ℤ) - (kj : ℤ)) ≤ j - i := by
+    rw [h_ki_val, h_kj_val]
+    -- |(-pos_i) - (-pos_j)| = |pos_j - pos_i|
+    simp only [neg_sub_neg]
+    exact h_bound
+
+  -- From |ki - kj| ≤ j - i, we get both inequalities
+  constructor
+  · -- ki ≤ kj + (j - i)
+    by_cases h : (ki : ℤ) ≤ (kj : ℤ)
+    · -- If ki ≤ kj, then ki ≤ kj + (j - i) trivially
+      have : ki ≤ kj := by exact_mod_cast h
+      linarith
+    · -- If ki > kj, then ki - kj ≤ j - i
+      push_neg at h
+      have h_pos : 0 < (ki : ℤ) - (kj : ℤ) := by linarith
+      have h_eq : Int.natAbs ((ki : ℤ) - (kj : ℤ)) = ki - kj := by
+        -- Since ki > kj, we have ki - kj is a natural number
+        have : (ki : ℤ) - (kj : ℤ) = ((ki - kj) : ℕ) := by
+          rw [Nat.cast_sub]
+          exact_mod_cast (le_of_lt h)
+        rw [this, Int.natAbs_natCast]
+      rw [h_eq] at h_diff
+      -- Now h_diff : ki - kj ≤ j - i
+      -- So ki ≤ kj + (j - i)
+      -- From h_diff: ki - kj ≤ j - i
+      -- We want: ki ≤ kj + (j - i)
+      have h_sub : ki - kj ≤ j - i := h_diff
+      -- Add kj to both sides
+      have : ki ≤ kj + (ki - kj) := by
+        have h_le : kj ≤ ki := Nat.cast_le.mp (le_of_lt h)
+        rw [Nat.add_comm, Nat.sub_add_cancel h_le]
+      linarith
+  · -- kj ≤ ki + (j - i)
+    by_cases h : (kj : ℤ) ≤ (ki : ℤ)
+    · -- If kj ≤ ki, then kj ≤ ki + (j - i) trivially
+      have : kj ≤ ki := by exact_mod_cast h
+      linarith
+    · -- If kj > ki, then kj - ki ≤ j - i
+      push_neg at h
+      have h_pos : 0 < (kj : ℤ) - (ki : ℤ) := by linarith
+      have h_eq : Int.natAbs ((ki : ℤ) - (kj : ℤ)) = kj - ki := by
+        -- Use Int.natAbs_neg
+        have h1 : (ki : ℤ) - (kj : ℤ) = -((kj : ℤ) - (ki : ℤ)) := by ring
+        rw [h1, Int.natAbs_neg]
+        -- Since kj > ki, we have kj - ki is a natural number
+        have : (kj : ℤ) - (ki : ℤ) = ((kj - ki) : ℕ) := by
+          rw [Nat.cast_sub]
+          exact_mod_cast (le_of_lt h)
+        rw [this, Int.natAbs_natCast]
+      rw [h_eq] at h_diff
+      -- Now h_diff : kj - ki ≤ j - i
+      -- So kj ≤ ki + (j - i)
+      -- From h_diff: kj - ki ≤ j - i
+      -- We want: kj ≤ ki + (j - i)
+      have h_sub : kj - ki ≤ j - i := h_diff
+      -- Add ki to both sides
+      have : kj ≤ ki + (kj - ki) := by
+        have h_le : ki ≤ kj := Nat.cast_le.mp (le_of_lt h)
+        rw [Nat.add_comm, Nat.sub_add_cancel h_le]
+      linarith
 
 /-- If the sequence changes at time t, then the machine hasn't terminated -/
 lemma sequence_change_implies_not_terminal (M : Machine Bool Λ) (init_cfg : Cfg Bool Λ) (t : ℕ)
